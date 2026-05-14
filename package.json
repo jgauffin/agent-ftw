@@ -1,0 +1,75 @@
+{
+  "name": "agent-ftw",
+  "version": "0.2.4",
+  "description": "A small TypeScript framework for structured, multi-phase LLM agents with JSON-schema deliverables, turn budgets, and per-phase model routing.",
+  "license": "MIT",
+  "author": "Jonas Gauffin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jgauffin/agent-ftw.git"
+  },
+  "homepage": "https://github.com/jgauffin/agent-ftw#readme",
+  "bugs": {
+    "url": "https://github.com/jgauffin/agent-ftw/issues"
+  },
+  "keywords": [
+    "llm",
+    "agent",
+    "agents",
+    "ai",
+    "openai",
+    "anthropic",
+    "claude",
+    "ollama",
+    "json-schema",
+    "pipeline"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run typecheck && npm run test && npm run build:dist",
+    "build:dist": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc --noEmit",
+    "docs": "typedoc"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "^4.0.3",
+    "json-schema-to-ts": "^3.1.1"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "*",
+    "@anthropic-ai/sdk": "*",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/claude-agent-sdk": {
+      "optional": true
+    },
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

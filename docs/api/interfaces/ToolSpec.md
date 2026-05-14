@@ -1,0 +1,37 @@
+# Interface: ToolSpec
+
+Defined in: adapters/types.ts:28
+
+Per-tool descriptor adapters receive on `RunContext.tools`. This is the
+framework-normalized view; adapters convert it to provider-native shapes
+(OpenAI function tools, MCP tool defs, etc.) before sending it to the model.
+
+## Properties
+
+### name
+
+```ts
+readonly name: string;
+```
+
+Defined in: adapters/types.ts:29
+
+***
+
+### description
+
+```ts
+readonly description: string;
+```
+
+Defined in: adapters/types.ts:30
+
+***
+
+### input
+
+```ts
+readonly input: JSONSchema;
+```
+
+Defined in: adapters/types.ts:31

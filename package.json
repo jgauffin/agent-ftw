@@ -1,6 +1,6 @@
 {
   "name": "agent-ftw",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A small TypeScript framework for structured, multi-phase LLM agents with JSON-schema deliverables, turn budgets, and per-phase model routing.",
   "license": "MIT",
   "author": "Jonas Gauffin",

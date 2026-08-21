@@ -90,7 +90,8 @@ describe("sub-agent", () => {
       deliverable: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] } as const,
       tools: [sa],
     });
-    const outer = agent({ name: "outer", phases: [outerPhase] });
+    // The inner agent may only hold tools the outer agent hands down.
+    const outer = agent({ name: "outer", delegable: [failingTool], phases: [outerPhase] });
 
     const outerFa = fakeAdapter([
       { calls: [{ name: "callInner", input: {} }] },

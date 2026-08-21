@@ -5,10 +5,11 @@ import { TurnBudgetExhausted } from "../adapters/types.js";
 import { dispatchTool } from "./dispatch.js";
 import { validateAgainstSchema as validateSchema } from "../schema/index.js";
 import type { PhaseTerminator } from "../declare/index.js";
+import { DEFAULT_TURN_BUDGET } from "../declare/index.js";
 import type { BudgetExtensionRecentActivity } from "../hooks/index.js";
 import type { SessionStore } from "./session-store.js";
 
-const DEFAULT_TURN_BUDGET = 30;
+const MAX_DELIVERABLE_ATTEMPTS = 3;
 const RECENT_TOOL_CALLS_MAX = 5;
 const TOOL_INPUT_SUMMARY_MAX = 200;
 
@@ -16,6 +17,8 @@ export class PhaseRun {
   private remaining: number;
   private readonly originalBudget: number;
   private extensionsGranted = 0;
+  /** Which ceiling raised the most recent exhaustion, so a grant lands on it. */
+  private exhaustedBy: "phase" | "run" = "phase";
   private conversation: Turn[] = [];
   private systemPrompt: string;
   private toolSpecs: ToolSpec[];
@@ -165,28 +168,52 @@ export class PhaseRun {
         });
       },
       consumeTurn: () => this.consumeTurn(),
+      // Always supplied so the framework — not each adapter — owns what happens
+      // when the model talks instead of calling a tool, and so the nudge is
+      // visible on the trace bus either way.
+      onAssistantText: (text) => this.handleAssistantText(text, signal),
       ...(persistence ? { persistence } : {}),
     };
-    if (this.phase.decl.onAssistantText) {
-      const cb = this.phase.decl.onAssistantText;
-      const ctxArgs = {
-        agent: this.agentRun.agentName,
-        phase: this.phase.decl.name,
-        runId: this.agentRun.runId,
-        signal,
-      };
-      (ctx as { onAssistantText?: (t: string) => Promise<string> }).onAssistantText = async (text) => {
-        this.agentRun.bus.emit({
-          type: "phase.assistantText",
-          agent: ctxArgs.agent,
-          phase: ctxArgs.phase,
-          runId: ctxArgs.runId,
-          text,
-        });
-        return await cb(text, ctxArgs);
-      };
-    }
     return ctx;
+  }
+
+  /**
+   * The model emitted text with no tool calls. Hand it to the host's callback if
+   * there is one, otherwise nudge it back into tool-calling. Either way the
+   * event is traced: a phase that keeps talking instead of finishing is a signal
+   * that its instructions never gave it a path to completion.
+   */
+  private async handleAssistantText(text: string, signal: AbortSignal): Promise<string> {
+    const ctxArgs = {
+      agent: this.agentRun.agentName,
+      phase: this.phase.decl.name,
+      runId: this.agentRun.runId,
+      signal,
+    };
+    const cb = this.phase.decl.onAssistantText;
+    if (cb) {
+      this.agentRun.bus.emit({
+        type: "phase.assistantText",
+        agent: ctxArgs.agent,
+        phase: ctxArgs.phase,
+        runId: ctxArgs.runId,
+        text,
+      });
+      return await cb(text, ctxArgs);
+    }
+
+    this.agentRun.bus.emit({
+      type: "phase.nudged",
+      agent: ctxArgs.agent,
+      phase: ctxArgs.phase,
+      runId: ctxArgs.runId,
+      text,
+    });
+    // With an external terminator the phase-end tool is not exposed, so naming
+    // it would point the model at a tool it cannot call.
+    return this.phase.hasExternalTerminator
+      ? "You must call one of the available tools to make progress."
+      : `You must call ${this.phase.phaseEndToolName} or another tool to make progress.`;
   }
 
   /**
@@ -296,20 +323,48 @@ export class PhaseRun {
     await this.saveChain;
   }
 
+  /**
+   * Two gates, both hard. The phase's own budget caps this loop; the session
+   * ledger caps the entire run tree. A phase with turns left still stops when
+   * the tree's pool is dry, which is what stops a nested agent tree from
+   * spending without bound.
+   */
   private consumeTurn(): void {
-    if (this.remaining <= 0) {
-      this.agentRun.bus.emit({
-        type: "budget.exhausted",
-        agent: this.agentRun.agentName,
-        phase: this.phase.decl.name,
-        runId: this.agentRun.runId,
-      });
-      throw new TurnBudgetExhausted();
+    if (this.remaining <= 0) this.raiseExhausted("phase");
+    if (!this.agentRun.session.ledger.tryConsume(this.agentRun.runId)) {
+      this.raiseExhausted("run");
     }
     this.remaining--;
   }
 
+  private raiseExhausted(limit: "phase" | "run"): never {
+    this.exhaustedBy = limit;
+    this.agentRun.bus.emit({
+      type: "budget.exhausted",
+      agent: this.agentRun.agentName,
+      phase: this.phase.decl.name,
+      runId: this.agentRun.runId,
+      limit,
+    });
+    throw new TurnBudgetExhausted(limit);
+  }
+
   private async askExtendBudget(): Promise<boolean> {
+    // A contracted child tops up from its parent first, within the ceiling the
+    // contract authorised up front. Only when that is spent does anyone get
+    // asked, which keeps an overrun from becoming an open-ended negotiation.
+    if (this.exhaustedBy === "run" && this.agentRun.tryTopUpFromParent(this.originalBudget)) {
+      this.agentRun.bus.emit({
+        type: "budget.extended",
+        agent: this.agentRun.agentName,
+        phase: this.phase.decl.name,
+        runId: this.agentRun.runId,
+        by: this.originalBudget,
+        limit: "run",
+      });
+      return true;
+    }
+
     const hook = this.agentRun.session.hooks.requestBudgetExtension;
     if (!hook) return false;
 
@@ -318,6 +373,8 @@ export class PhaseRun {
       agent: this.agentRun.agentName,
       phase: this.phase.decl.name,
       runId: this.agentRun.runId,
+      depth: this.agentRun.depth,
+      limit: this.exhaustedBy,
       originalBudget: this.originalBudget,
       turnsUsed,
       extensionsGranted: this.extensionsGranted,
@@ -333,7 +390,14 @@ export class PhaseRun {
     if (!Number.isFinite(response.extendBy) || response.extendBy <= 0) return false;
 
     const by = Math.floor(response.extendBy);
-    this.remaining += by;
+    // The grant has to land on whichever ceiling actually bound: topping up the
+    // phase when the run pool is dry would just exhaust again on the next turn.
+    // Only a host grant adds to the run pool — nothing inside the run can.
+    if (this.exhaustedBy === "run") {
+      this.agentRun.session.ledger.grant(this.agentRun.runId, by);
+    } else {
+      this.remaining += by;
+    }
     this.extensionsGranted++;
     this.agentRun.bus.emit({
       type: "budget.extended",
@@ -341,6 +405,7 @@ export class PhaseRun {
       phase: this.phase.decl.name,
       runId: this.agentRun.runId,
       by,
+      limit: this.exhaustedBy,
     });
     return true;
   }
@@ -376,18 +441,46 @@ export class PhaseRun {
     };
   }
 
+  /**
+   * A phase may not end on a payload that does not match its deliverable schema.
+   * Each failure is fed back to the model as a correction request; after
+   * MAX_DELIVERABLE_ATTEMPTS the phase fails loudly rather than passing a
+   * malformed payload into the next phase's context, where the real cause would
+   * be invisible.
+   */
   private async ensureValidDeliverable(payload: unknown): Promise<unknown> {
-    const v = validateSchema(this.phase.decl.deliverable, payload);
-    if (v.valid) return payload;
-    if (this.phase.hasExternalTerminator) {
-      throw new Error(
-        `phase "${this.phase.decl.name}" external terminator returned invalid deliverable: ${v.errors.join("; ")}`
-      );
+    let current = payload;
+    for (let attempt = 1; ; attempt++) {
+      const v = validateSchema(this.phase.decl.deliverable, current);
+      if (v.valid) return current;
+
+      if (this.phase.hasExternalTerminator) {
+        throw new Error(
+          `phase "${this.phase.decl.name}" external terminator returned invalid deliverable: ${v.errors.join("; ")}`
+        );
+      }
+
+      this.agentRun.bus.emit({
+        type: "deliverable.rejected",
+        agent: this.agentRun.agentName,
+        phase: this.phase.decl.name,
+        runId: this.agentRun.runId,
+        attempt,
+        errors: v.errors,
+      });
+
+      if (attempt >= MAX_DELIVERABLE_ATTEMPTS) {
+        throw new Error(
+          `phase "${this.phase.decl.name}" did not produce a valid deliverable after ` +
+            `${MAX_DELIVERABLE_ATTEMPTS} attempts. Last errors: ${v.errors.join("; ")}`
+        );
+      }
+
+      const feedback =
+        `Your deliverable did not match the required schema. Errors:\n${v.errors.join("\n")}\n` +
+        `Call ${this.phase.phaseEndToolName} again with a corrected payload.`;
+      current = await this.runLoop(feedback);
     }
-    const feedback =
-      `Your deliverable did not match the required schema. Errors:\n${v.errors.join("\n")}\n` +
-      `Call ${this.phase.phaseEndToolName} again with a corrected payload.`;
-    return await this.runLoop(feedback);
   }
 
   private async runChecklist(payload: unknown): Promise<unknown> {

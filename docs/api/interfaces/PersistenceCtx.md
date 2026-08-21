@@ -1,6 +1,6 @@
 # Interface: PersistenceCtx
 
-Defined in: adapters/types.ts:82
+Defined in: [adapters/types.ts:99](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L99)
 
 Adapter-facing slice of session persistence. Provides a per-(session, phase)
 scratchpad for adapter-private state (e.g. the Claude SDK's resumable session
@@ -15,7 +15,7 @@ top-level — sub-agent runs do not persist.
 readonly sessionId: string;
 ```
 
-Defined in: adapters/types.ts:83
+Defined in: [adapters/types.ts:100](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L100)
 
 ***
 
@@ -25,7 +25,7 @@ Defined in: adapters/types.ts:83
 readonly agentName: string;
 ```
 
-Defined in: adapters/types.ts:84
+Defined in: [adapters/types.ts:101](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L101)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: adapters/types.ts:84
 readonly phaseName: string;
 ```
 
-Defined in: adapters/types.ts:85
+Defined in: [adapters/types.ts:102](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L102)
 
 ## Methods
 
@@ -45,7 +45,7 @@ Defined in: adapters/types.ts:85
 getAdapterMeta(key: string): unknown;
 ```
 
-Defined in: adapters/types.ts:87
+Defined in: [adapters/types.ts:104](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L104)
 
 Read an adapter-specific scratchpad value (typed at the adapter's discretion).
 
@@ -67,7 +67,7 @@ Read an adapter-specific scratchpad value (typed at the adapter's discretion).
 setAdapterMeta(key: string, value: unknown): Promise<void>;
 ```
 
-Defined in: adapters/types.ts:89
+Defined in: [adapters/types.ts:106](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L106)
 
 Write an adapter-specific scratchpad value; persisted before the call resolves.
 

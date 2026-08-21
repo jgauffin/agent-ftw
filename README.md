@@ -144,6 +144,58 @@ What this snippet demonstrates that a single-loop agent can't:
 
 Get going: [docs/GettingStarted.md](docs/GettingStarted.md).
 
+## Coordinators: trees that stay under control
+
+An agent can delegate to sub-agents, and those sub-agents can delegate further. What usually goes wrong with that shape is not that the model is stupid, it is that nothing stops it: budgets reset at every level, a leaf can hold authority nobody granted it, and a parent accepts whatever comes back. Instructions do not fix this, because an instruction is exactly the thing a drifting agent stops following.
+
+So the limits here are not advice. They are arithmetic, or capabilities the agent does not have.
+
+**Authority only narrows going down.** An agent declares `tools` (what it may call) and `delegable` (what it may hand down). A sub-agent may only declare tools its parent listed as delegable, checked when the agent is compiled. The two lists are separate so a coordinator that holds nothing dangerous can still put edit authority in a leaf:
+
+```ts
+const lead = agent({
+  name: "lead",
+  role: "coordinator",
+  tools: [readSource],               // what it may call: nothing that changes anything
+  delegable: [readSource, editFile], // what it may hand down
+  phases: [/* ... */],
+});
+```
+
+A tool declares `mutates: true` if it changes something outside the run. A coordinator may not hold one, so it cannot quietly abandon its own plan and start doing the work itself.
+
+**Turns are conserved.** `Session`'s `turnBudget` covers the entire tree. A contract's allocation is deducted from the coordinator's own balance when the child starts and returned when it finishes, so no arrangement of sub-agents can spend more than the root was given. A phase's own `turnBudget` still caps that one phase's loop; both have to pass.
+
+**Delegation is a batch, checked before anything starts.** A coordinator gets one injected `delegate` tool and passes every contract in a single call. Turn allocations must fit the balance, grants must be within `delegable`, a mutating grant must declare a `writeSet`, and contracts writing to the same place are run one after another rather than together. A batch that does not add up starts nothing and comes back with per-contract reasons.
+
+**A parent may say no.** A contracted child returns its deliverable wrapped in a status, the evidence for it, and the objective restated in its own words. The parent checks the shape, checks the evidence stays inside the write-set, and then runs a host-supplied `accept` predicate — ordinary TypeScript, deliberately not another model call. Three outcomes, and "it came back" is not one of them: accept, reject with a reason and send it back within the same allocation, or abandon and report partial upward.
+
+`blocked` is a first-class outcome. A child that hits a real ambiguity says so and hands the decision up, instead of inventing an answer that fits the schema.
+
+**Results move sideways without sideways edges.** Children never talk to each other. An accepted result is stored under the run that produced it, and a later contract names the key it may read, so one child's output reaches another without the payload passing through the coordinator or two siblings coupling to each other.
+
+Depth, fan-out, repeat batches and repeated identical contracts are all capped. See [examples/08-coordinator.ts](examples/08-coordinator.ts) for the whole thing working end to end.
+
+## Checking an agent before you run it
+
+Most bad runs trace back to an instruction or a deliverable schema, and the failure usually surfaces somewhere other than where the problem is. `lint` reads a declaration (and every sub-agent reachable from it) and reports the ones that are findable statically. No model is called and nothing is executed.
+
+```ts
+import { lint } from "agent-ftw";
+
+for (const f of lint(triager)) {
+  console.log(`${f.severity} ${f.code} at ${f.path}`);
+  console.log(`  ${f.message}`);
+  console.log(`  ${f.hint}`);
+}
+```
+
+It catches things like a deliverable an empty object would satisfy (properties declared, nothing `required`), a free-form string explained neither by a schema `description` nor by the phase prompt, an object so unconstrained that anything validates, and a `checklist` with no `adapter` of its own, which leaves the model grading its own work.
+
+`lint` never throws and is separate from `validate`, which is what rejects a structurally invalid agent. These findings are about the quality of what you wrote, so the call is yours.
+
+When a run does go wrong, two trace events say why: `deliverable.rejected` fires for every payload that failed its schema, with the attempt number and the validation errors, and `phase.nudged` fires when the model produced text instead of calling a tool. A phase that keeps emitting either is telling you its instructions never gave it a path to finishing.
+
 ## Honest comparison to other agent frameworks
 
 This isn't a general-purpose agent framework. It picks a narrow shape and commits to it. Whether that's a fit depends on what you're building.

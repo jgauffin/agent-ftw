@@ -9,7 +9,7 @@ function tool<O>(d: {
 }): ToolDecl;
 ```
 
-Defined in: declare/index.ts:306
+Defined in: [declare/index.ts:306](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L306)
 
 Define a plain tool the model may call. The handler's return value is
 passed back to the model as the tool result (stringified if not already

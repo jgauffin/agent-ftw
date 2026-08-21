@@ -1,6 +1,6 @@
 # Interface: RunContext
 
-Defined in: adapters/types.ts:48
+Defined in: [adapters/types.ts:56](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L56)
 
 The contract between the framework and an [Adapter](Adapter.md). The framework
 builds one per phase invocation, hands it to `adapter.runUntilPhaseEnd`,
@@ -15,6 +15,14 @@ Adapters MUST:
    handlers themselves
  - return when (and only when) the model calls `phaseEndToolName`
 
+NOT a UI surface. `RunContext` is for **adapter implementers**. The sync
+callbacks (`onTurn`, `consumeTurn`) run on the adapter's hot loop and must
+stay sync — they are not subscription points. Hosts that need to render
+chat, stream tokens, or react to turns should implement `Hooks.trace` and
+listen for `model.turn` events instead (see `src/trace/index.ts`). To grant
+more turns when the budget is exhausted, implement
+`Hooks.requestBudgetExtension` — there is no extension knob on `RunContext`.
+
 ## Properties
 
 ### systemPrompt
@@ -23,7 +31,7 @@ Adapters MUST:
 readonly systemPrompt: string;
 ```
 
-Defined in: adapters/types.ts:49
+Defined in: [adapters/types.ts:57](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L57)
 
 ***
 
@@ -33,7 +41,7 @@ Defined in: adapters/types.ts:49
 readonly conversation: readonly Turn[];
 ```
 
-Defined in: adapters/types.ts:50
+Defined in: [adapters/types.ts:58](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L58)
 
 ***
 
@@ -43,7 +51,7 @@ Defined in: adapters/types.ts:50
 readonly optional newUserText?: string;
 ```
 
-Defined in: adapters/types.ts:51
+Defined in: [adapters/types.ts:59](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L59)
 
 ***
 
@@ -53,7 +61,7 @@ Defined in: adapters/types.ts:51
 readonly tools: readonly ToolSpec[];
 ```
 
-Defined in: adapters/types.ts:52
+Defined in: [adapters/types.ts:60](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L60)
 
 ***
 
@@ -63,7 +71,7 @@ Defined in: adapters/types.ts:52
 readonly phaseEndToolName: string;
 ```
 
-Defined in: adapters/types.ts:53
+Defined in: [adapters/types.ts:61](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L61)
 
 ***
 
@@ -73,7 +81,7 @@ Defined in: adapters/types.ts:53
 readonly signal: AbortSignal;
 ```
 
-Defined in: adapters/types.ts:54
+Defined in: [adapters/types.ts:62](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L62)
 
 ***
 
@@ -83,7 +91,7 @@ Defined in: adapters/types.ts:54
 readonly optional persistence?: PersistenceCtx;
 ```
 
-Defined in: adapters/types.ts:73
+Defined in: [adapters/types.ts:90](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L90)
 
 Persistence hooks. Set only when session persistence is enabled and the
 current run is top-level (sub-agents are not persisted). Adapters that
@@ -100,7 +108,7 @@ dispatchTool(
 callId: string): Promise<unknown>;
 ```
 
-Defined in: adapters/types.ts:56
+Defined in: [adapters/types.ts:64](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L64)
 
 Framework dispatches the tool. Adapter never executes handlers.
 
@@ -124,9 +132,11 @@ Framework dispatches the tool. Adapter never executes handlers.
 onTurn(turn: Turn): void;
 ```
 
-Defined in: adapters/types.ts:58
+Defined in: [adapters/types.ts:70](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L70)
 
-Adapter calls this for every model/tool turn so trace can observe.
+Adapter calls this for every model/tool turn so trace and persistence can
+observe. Sync by design — runs on the adapter's hot loop. Hosts must not
+use this as a UI hook; subscribe to `Hooks.trace` (`model.turn`) instead.
 
 #### Parameters
 
@@ -146,9 +156,12 @@ Adapter calls this for every model/tool turn so trace can observe.
 consumeTurn(): void;
 ```
 
-Defined in: adapters/types.ts:60
+Defined in: [adapters/types.ts:77](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L77)
 
-Adapter calls before each model turn; throws if budget is exhausted. Returns granted turns.
+Adapter calls before each model turn; throws `TurnBudgetExhausted` if the
+budget is exhausted. Sync — do not await UI here. To make exhaustion
+recoverable, implement `Hooks.requestBudgetExtension`; the framework calls
+it after this throws and retries on grant.
 
 #### Returns
 
@@ -162,7 +175,7 @@ Adapter calls before each model turn; throws if budget is exhausted. Returns gra
 optional onAssistantText(text: string): Promise<string>;
 ```
 
-Defined in: adapters/types.ts:67
+Defined in: [adapters/types.ts:84](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L84)
 
 If set, the adapter MUST call this when the model emits a turn that has
 text but no tool calls — instead of nudging the model with a "you must call

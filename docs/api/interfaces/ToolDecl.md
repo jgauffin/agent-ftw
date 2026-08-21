@@ -1,6 +1,6 @@
 # Interface: ToolDecl
 
-Defined in: declare/index.ts:18
+Defined in: [declare/index.ts:18](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L18)
 
 Plain tool the model may call inside a phase. Created via [tool](../functions/tool.md).
 
@@ -16,7 +16,7 @@ narrow with a type guard or cast).
 readonly kind: "tool";
 ```
 
-Defined in: declare/index.ts:19
+Defined in: [declare/index.ts:19](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L19)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: declare/index.ts:19
 readonly name: string;
 ```
 
-Defined in: declare/index.ts:21
+Defined in: [declare/index.ts:21](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L21)
 
 Name the model sees (and uses to call the tool). Must be unique within an agent.
 
@@ -38,7 +38,7 @@ Name the model sees (and uses to call the tool). Must be unique within an agent.
 readonly description: string;
 ```
 
-Defined in: declare/index.ts:23
+Defined in: [declare/index.ts:23](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L23)
 
 Human/model-facing description; this is the model's only documentation for the tool.
 
@@ -50,7 +50,7 @@ Human/model-facing description; this is the model's only documentation for the t
 readonly input: JSONSchema;
 ```
 
-Defined in: declare/index.ts:25
+Defined in: [declare/index.ts:25](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L25)
 
 JSON Schema for the tool's input. Framework validates calls against this before dispatch.
 
@@ -62,7 +62,7 @@ JSON Schema for the tool's input. Framework validates calls against this before 
 readonly handler: (input: unknown, ctx: ToolHandlerCtx) => Promise<unknown>;
 ```
 
-Defined in: declare/index.ts:30
+Defined in: [declare/index.ts:30](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L30)
 
 Implementation. Receives the validated input and a context with cancellation,
 `askUser`, and `emit`. Throw to surface an error result to the model.

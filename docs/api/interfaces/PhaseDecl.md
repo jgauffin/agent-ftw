@@ -1,6 +1,6 @@
 # Interface: PhaseDecl
 
-Defined in: declare/index.ts:239
+Defined in: [declare/index.ts:239](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L239)
 
 A single stage in an agent pipeline. Created via [phase](../functions/phase.md).
 
@@ -18,7 +18,7 @@ validates against `deliverable`, or when the turn budget is exhausted, or
 readonly kind: "phase";
 ```
 
-Defined in: declare/index.ts:240
+Defined in: [declare/index.ts:240](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L240)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: declare/index.ts:240
 readonly name: string;
 ```
 
-Defined in: declare/index.ts:242
+Defined in: [declare/index.ts:242](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L242)
 
 Phase name. Unique within an agent. Used to derive the `finish_<name>` tool.
 
@@ -40,7 +40,7 @@ Phase name. Unique within an agent. Used to derive the `finish_<name>` tool.
 readonly prompt: string;
 ```
 
-Defined in: declare/index.ts:244
+Defined in: [declare/index.ts:244](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L244)
 
 The phase's user-visible task description. Appended after the framework's system prompt.
 
@@ -52,7 +52,7 @@ The phase's user-visible task description. Appended after the framework's system
 readonly deliverable: JSONSchema;
 ```
 
-Defined in: declare/index.ts:246
+Defined in: [declare/index.ts:246](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L246)
 
 JSON Schema the deliverable must satisfy. Phase doesn't end until the model emits a valid payload.
 
@@ -67,7 +67,7 @@ readonly tools: readonly (
   | CustomSubAgentDecl)[];
 ```
 
-Defined in: declare/index.ts:248
+Defined in: [declare/index.ts:248](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L248)
 
 Tools available to the model during this phase, in addition to the agent's global tools.
 
@@ -79,7 +79,7 @@ Tools available to the model during this phase, in addition to the agent's globa
 readonly optional adapter?: Adapter;
 ```
 
-Defined in: declare/index.ts:250
+Defined in: [declare/index.ts:250](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L250)
 
 Adapter override for this phase's model loop. Falls back to the agent's adapter, then the session default.
 
@@ -91,7 +91,7 @@ Adapter override for this phase's model loop. Falls back to the agent's adapter,
 readonly optional checklist?: ChecklistDecl;
 ```
 
-Defined in: declare/index.ts:252
+Defined in: [declare/index.ts:252](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L252)
 
 Optional LLM-as-judge gate. Failing checks trigger a re-run with feedback.
 
@@ -103,7 +103,7 @@ Optional LLM-as-judge gate. Failing checks trigger a re-run with feedback.
 readonly optional turnBudget?: number;
 ```
 
-Defined in: declare/index.ts:254
+Defined in: [declare/index.ts:254](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L254)
 
 Max model turns before `TurnBudgetExhausted` is raised. Framework default applies if unset.
 
@@ -115,7 +115,7 @@ Max model turns before `TurnBudgetExhausted` is raised. Framework default applie
 readonly optional review?: boolean;
 ```
 
-Defined in: declare/index.ts:256
+Defined in: [declare/index.ts:256](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L256)
 
 If `true`, the host's `Hooks.review` callback drives a review chat after the deliverable validates. Top-level phases only.
 
@@ -127,7 +127,7 @@ If `true`, the host's `Hooks.review` callback drives a review chat after the del
 readonly optional terminator?: PhaseTerminator;
 ```
 
-Defined in: declare/index.ts:258
+Defined in: [declare/index.ts:258](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L258)
 
 How the phase decides it is done. Defaults to `{ kind: "tool" }`.
 
@@ -139,7 +139,7 @@ How the phase decides it is done. Defaults to `{ kind: "tool" }`.
 readonly optional onAssistantText?: OnAssistantText;
 ```
 
-Defined in: declare/index.ts:260
+Defined in: [declare/index.ts:260](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L260)
 
 Override for model turns that emit text without tool calls. See [OnAssistantText](../type-aliases/OnAssistantText.md).
 
@@ -151,6 +151,6 @@ Override for model turns that emit text without tool calls. See [OnAssistantText
 readonly optional phaseEndToolName?: string;
 ```
 
-Defined in: declare/index.ts:262
+Defined in: [declare/index.ts:262](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L262)
 
 Override the auto-generated phase-end tool name. Defaults to `finish_<name>`.

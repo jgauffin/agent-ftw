@@ -13,7 +13,7 @@ function agent(d: {
 }): AgentDecl;
 ```
 
-Defined in: declare/index.ts:429
+Defined in: [declare/index.ts:429](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L429)
 
 Define an agent: an ordered list of phases and (optionally) global tools
 shared by every phase. An optional `adapter` overrides the session default

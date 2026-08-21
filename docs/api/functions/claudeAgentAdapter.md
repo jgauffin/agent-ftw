@@ -4,7 +4,7 @@
 function claudeAgentAdapter(cfg: ClaudeAgentConfig): Adapter;
 ```
 
-Defined in: adapters/claude-agent.ts:76
+Defined in: [adapters/claude-agent.ts:76](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/claude-agent.ts#L76)
 
 Claude Agent SDK adapter — drives the model loop via the SDK's `query()` for
 both `runUntilPhaseEnd` and `runStructured` (the latter as a one-shot query

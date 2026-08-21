@@ -1,6 +1,6 @@
 # Interface: Adapter
 
-Defined in: adapters/types.ts:116
+Defined in: [adapters/types.ts:133](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L133)
 
 Pluggable model backend. The framework ships three implementations:
 
@@ -22,7 +22,7 @@ only convert wire formats and drive the provider's tool-loop API.
 runUntilPhaseEnd(ctx: RunContext): Promise<PhaseEndResult>;
 ```
 
-Defined in: adapters/types.ts:118
+Defined in: [adapters/types.ts:135](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L135)
 
 Drive the model loop until the phase-end tool is called. See [RunContext](RunContext.md).
 
@@ -49,7 +49,7 @@ runStructured(args: {
 }): Promise<unknown>;
 ```
 
-Defined in: adapters/types.ts:120
+Defined in: [adapters/types.ts:137](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L137)
 
 One-shot structured generation; used by checklists.
 
@@ -75,7 +75,7 @@ One-shot structured generation; used by checklists.
 optional dispose(): Promise<void>;
 ```
 
-Defined in: adapters/types.ts:127
+Defined in: [adapters/types.ts:144](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L144)
 
 Optional cleanup hook. Called by `Session.dispose`.
 

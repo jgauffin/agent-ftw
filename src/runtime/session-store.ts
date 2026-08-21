@@ -48,6 +48,27 @@ interface PhaseFile {
 const META_FILE = "meta.json";
 const DELIVERABLES_FILE = "deliverables.json";
 const PHASES_DIR = "phases";
+const JOURNAL_FILE = "journal.ndjson";
+
+/**
+ * One delegated piece of work and how it ended, recorded as it happens.
+ *
+ * Enough to reconstruct who was asked to do what, with which authority and
+ * budget, and why the parent accepted or refused it.
+ */
+export interface JournalEntry {
+  readonly at: number;
+  /** Run path of the child, e.g. `root.2`. */
+  readonly runPath: string;
+  readonly parentRunPath: string;
+  readonly childAgent: string;
+  readonly objective: string;
+  readonly turns: number;
+  readonly writeSet: readonly string[];
+  readonly outcome: "accepted" | "rejected" | "abandoned" | "blocked" | "error";
+  /** Why it was refused, or what blocked it. */
+  readonly reason?: string;
+}
 
 export class SessionStore {
   readonly root: string;
@@ -70,6 +91,37 @@ export class SessionStore {
 
   private phasePath(name: string): string {
     return path.join(this.root, PHASES_DIR, `${sanitize(name)}.json`);
+  }
+
+  private get journalPath(): string {
+    return path.join(this.root, JOURNAL_FILE);
+  }
+
+  /**
+   * Append one delegation record. Sub-agent runs are not otherwise persisted,
+   * so without this a finished tree leaves no trace of who was asked to do
+   * what, which is exactly what a post-mortem needs.
+   *
+   * Newline-delimited JSON, appended, so a crash mid-run still leaves every
+   * completed record readable.
+   */
+  async appendJournal(entry: JournalEntry): Promise<void> {
+    await fs.mkdir(this.root, { recursive: true });
+    await fs.appendFile(this.journalPath, `${JSON.stringify(entry)}\n`, "utf8");
+  }
+
+  /** Every delegation record for this session, oldest first. */
+  async loadJournal(): Promise<readonly JournalEntry[]> {
+    let raw: string;
+    try {
+      raw = await fs.readFile(this.journalPath, "utf8");
+    } catch {
+      return [];
+    }
+    return raw
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .map((line) => JSON.parse(line) as JournalEntry);
   }
 
   async exists(): Promise<boolean> {

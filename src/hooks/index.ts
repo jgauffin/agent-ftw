@@ -35,7 +35,17 @@ export interface ReviewCtx {
 export interface BudgetExtensionRequest {
   readonly agent: string;
   readonly phase: string;
+  /** Position in the run tree, e.g. `root.2.1`. */
   readonly runId: string;
+  /** Distance from the root run; 0 is the top-level agent. */
+  readonly depth: number;
+  /**
+   * Which ceiling ran out. `"phase"` is this phase's own `turnBudget`;
+   * `"run"` is the session-wide budget shared by the whole tree. Granting
+   * against a `"run"` exhaustion adds turns the entire tree can spend, so it
+   * is the one worth thinking hard about.
+   */
+  readonly limit: "phase" | "run";
   /** The phase's configured turn budget (or framework default if unset). */
   readonly originalBudget: number;
   /** Total turns the phase has consumed so far (original + prior extensions). */

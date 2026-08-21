@@ -1,6 +1,6 @@
 # Interface: CustomSubAgentDecl
 
-Defined in: declare/index.ts:98
+Defined in: [declare/index.ts:98](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L98)
 
 Sub-agent whose body is a custom TS handler instead of a phased AgentDecl.
 Use when coordination is conditional (fail-fast gating, fan-out/join, deterministic
@@ -17,7 +17,7 @@ Output is validated against `output` before the result is returned to the caller
 readonly kind: "customSubAgent";
 ```
 
-Defined in: declare/index.ts:99
+Defined in: [declare/index.ts:99](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L99)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: declare/index.ts:99
 readonly name: string;
 ```
 
-Defined in: declare/index.ts:100
+Defined in: [declare/index.ts:100](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L100)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: declare/index.ts:100
 readonly description: string;
 ```
 
-Defined in: declare/index.ts:101
+Defined in: [declare/index.ts:101](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L101)
 
 ***
 
@@ -47,7 +47,7 @@ Defined in: declare/index.ts:101
 readonly input: JSONSchema;
 ```
 
-Defined in: declare/index.ts:102
+Defined in: [declare/index.ts:102](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L102)
 
 ***
 
@@ -57,7 +57,7 @@ Defined in: declare/index.ts:102
 readonly output: JSONSchema;
 ```
 
-Defined in: declare/index.ts:104
+Defined in: [declare/index.ts:104](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L104)
 
 JSON Schema for the handler's return value. Validated before the result is exposed to the model.
 
@@ -69,7 +69,7 @@ JSON Schema for the handler's return value. Validated before the result is expos
 readonly handler: (input: unknown, ctx: CustomSubAgentCtx) => Promise<unknown>;
 ```
 
-Defined in: declare/index.ts:105
+Defined in: [declare/index.ts:105](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L105)
 
 #### Parameters
 

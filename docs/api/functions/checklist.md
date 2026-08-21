@@ -8,7 +8,7 @@ function checklist(d: {
 }): ChecklistDecl;
 ```
 
-Defined in: declare/index.ts:368
+Defined in: [declare/index.ts:368](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L368)
 
 Define a checklist gate for a phase. The session's `localModel` adapter
 runs the checklist after the deliverable is produced; failing checks trigger

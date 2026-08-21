@@ -1,20 +1,45 @@
 import type { CompiledAgent } from "../compile/index.js";
-import type { SubAgentDecl } from "../declare/index.js";
+import type { AgentDecl, SubAgentDecl } from "../declare/index.js";
 import { validate } from "../compile/index.js";
 import type { Session } from "./session.js";
 import type { Adapter } from "../adapters/types.js";
 import { PhaseRun } from "./phase-run.js";
 import type { TraceBus } from "../trace/index.js";
 
-let runIdCounter = 0;
-function nextRunId(): string {
-  return `run_${++runIdCounter}`;
-}
+/** Path id of the run at the top of a session's tree. */
+export const ROOT_RUN_PATH = "root";
 
 export class AgentRun {
+  /**
+   * Position in the run tree, e.g. `root.2.1`. Ledger nodes, traces and (later)
+   * artifact keys all address a run by this, so one identity locates a node
+   * everywhere it appears.
+   */
   readonly runId: string;
+  /** Distance from the root run. The root is 0. */
+  readonly depth: number;
   readonly agentName: string;
   readonly signal: AbortSignal;
+  /**
+   * Paths this run may write to, from the contract that created it. Mutating
+   * tools receive it and refuse anything outside. Inherited from the parent
+   * when a contract does not narrow it further.
+   */
+  readonly writeSet: readonly string[] | undefined;
+  /** What this run was contracted to achieve, when it came from a contract. */
+  readonly objective: string | undefined;
+  /** Total turns the contract pre-authorised for this run, top-ups included. */
+  readonly maxTurns: number | undefined;
+  private reserved = 0;
+  /** Children contracted so far, counted across every batch. */
+  contractsSpawned = 0;
+  /** Delegate batches issued, so a coordinator cannot re-plan without end. */
+  batchesIssued = 0;
+  /** Consecutive batches that produced nothing accepted. */
+  emptyBatchStreak = 0;
+  /** Contracts already issued, so the same one is not run twice. */
+  readonly contractHashes = new Set<string>();
+  private childCount = 0;
   /**
    * Adapter for this agent's phases unless a phase overrides it. Resolved from
    * the agent's own `adapter`, else the parent run's `effectiveAdapter`, else
@@ -26,9 +51,15 @@ export class AgentRun {
   constructor(
     readonly session: Session,
     readonly compiled: CompiledAgent,
-    readonly parent: AgentRun | null
+    readonly parent: AgentRun | null,
+    contract?: { objective?: string; writeSet?: readonly string[]; maxTurns?: number }
   ) {
-    this.runId = nextRunId();
+    this.objective = contract?.objective;
+    this.maxTurns = contract?.maxTurns;
+    this.writeSet = contract?.writeSet ?? parent?.writeSet;
+    this.runId = parent ? parent.nextChildPath() : ROOT_RUN_PATH;
+    this.depth = parent ? parent.depth + 1 : 0;
+    if (parent) session.ledger.createChild(this.runId, parent.runId);
     this.agentName = compiled.decl.name;
     this.effectiveAdapter =
       compiled.decl.adapter ?? (parent ? parent.effectiveAdapter : session.defaultAdapter);
@@ -47,8 +78,37 @@ export class AgentRun {
     return this.parent === null;
   }
 
+  private nextChildPath(): string {
+    return `${this.runId}.${++this.childCount}`;
+  }
+
+  /** Record turns reserved for this run, so top-ups know the ceiling. */
+  noteReserved(turns: number): void {
+    this.reserved += turns;
+  }
+
+  /**
+   * Draw more turns from the parent, up to the ceiling the contract authorised
+   * in advance. Returns false at the ceiling, which is what turns an overrun
+   * into a `partial` return instead of an open-ended request for more.
+   */
+  tryTopUpFromParent(want: number): boolean {
+    if (this.maxTurns === undefined || this.parent === null) return false;
+    const headroom = this.maxTurns - this.reserved;
+    if (headroom <= 0) return false;
+    const take = Math.min(want, headroom);
+    if (!this.session.ledger.reserve(this.runId, take)) return false;
+    this.reserved += take;
+    return true;
+  }
+
   spawnChild(sub: SubAgentDecl): AgentRun {
-    const childCompiled = validate(sub.agent);
+    // Re-compiled at the depth it will actually run at, so the limit means the
+    // same thing here as it did when the whole tree was validated.
+    const childCompiled = validate(sub.agent, {
+      maxDepth: this.session.maxDepth,
+      depth: this.depth + 1,
+    });
     return new AgentRun(this.session, childCompiled, this);
   }
 
@@ -58,6 +118,27 @@ export class AgentRun {
    */
   spawnRuntimeChild(compiled: CompiledAgent): AgentRun {
     return new AgentRun(this.session, compiled, this);
+  }
+
+  /**
+   * Spawn a child for one delegation contract. The declaration arrives already
+   * narrowed to the granted tools, and the contract's objective and write-set
+   * travel with the run.
+   */
+  spawnContractChild(
+    childDecl: AgentDecl,
+    contract: { objective: string; writeSet: readonly string[] | undefined; maxTurns?: number }
+  ): AgentRun {
+    this.contractsSpawned++;
+    const compiled = validate(childDecl, {
+      maxDepth: this.session.maxDepth,
+      depth: this.depth + 1,
+    });
+    return new AgentRun(this.session, compiled, this, {
+      objective: contract.objective,
+      ...(contract.writeSet !== undefined ? { writeSet: contract.writeSet } : {}),
+      ...(contract.maxTurns !== undefined ? { maxTurns: contract.maxTurns } : {}),
+    });
   }
 
   async execute(input: unknown): Promise<unknown> {
@@ -72,7 +153,11 @@ export class AgentRun {
     try {
       const deliverables = new Map<string, unknown>();
       let lastDeliverable: unknown = undefined;
-      let initialInput = serializeInput(input);
+      // A contracted run leads with its objective so the first phase is working
+      // to the goal it was given, not just to the payload it received.
+      let initialInput = this.objective
+        ? `Objective: ${this.objective}\n\nInput: ${serializeInput(input)}`
+        : serializeInput(input);
 
       // Persistence: only the top-level run is persisted. Sub-agents are rerun on resume.
       const store = this.isTopLevel ? this.session.store : undefined;

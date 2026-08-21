@@ -1,6 +1,6 @@
 # Interface: AnthropicApiConfig
 
-Defined in: adapters/anthropic-api.ts:24
+Defined in: [adapters/anthropic-api.ts:24](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/anthropic-api.ts#L24)
 
 Configuration for [anthropicApiAdapter](../functions/anthropicApiAdapter.md).
 
@@ -24,7 +24,7 @@ If you have a Claude **subscription** rather than an API key, use
 readonly model: string;
 ```
 
-Defined in: adapters/anthropic-api.ts:26
+Defined in: [adapters/anthropic-api.ts:26](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/anthropic-api.ts#L26)
 
 Model id, e.g. `"claude-sonnet-4-6"`.
 
@@ -36,7 +36,7 @@ Model id, e.g. `"claude-sonnet-4-6"`.
 readonly optional apiKey?: string;
 ```
 
-Defined in: adapters/anthropic-api.ts:28
+Defined in: [adapters/anthropic-api.ts:28](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/anthropic-api.ts#L28)
 
 Optional API key. Falls back to `ANTHROPIC_API_KEY` in the environment.
 
@@ -48,7 +48,7 @@ Optional API key. Falls back to `ANTHROPIC_API_KEY` in the environment.
 readonly optional maxTokens?: number;
 ```
 
-Defined in: adapters/anthropic-api.ts:30
+Defined in: [adapters/anthropic-api.ts:30](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/anthropic-api.ts#L30)
 
 `max_tokens` for each Messages API request. Defaults to 4096.
 
@@ -60,4 +60,4 @@ Defined in: adapters/anthropic-api.ts:30
 readonly optional temperature?: number;
 ```
 
-Defined in: adapters/anthropic-api.ts:31
+Defined in: [adapters/anthropic-api.ts:31](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/anthropic-api.ts#L31)

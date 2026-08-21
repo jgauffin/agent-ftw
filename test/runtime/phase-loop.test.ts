@@ -94,6 +94,38 @@ describe("phase loop", () => {
     expect(feedback).toBeTruthy();
   });
 
+  it("does not accept a deliverable that fails validation twice in a row", async () => {
+    const p = phase({
+      name: "p1",
+      prompt: "go",
+      deliverable: { type: "object", properties: { x: { type: "number" } }, required: ["x"] } as const,
+    });
+    const a = agent({ name: "a", phases: [p] });
+    const fa = fakeAdapter([
+      { finish: { wrong: "shape" } },
+      { finish: { still: "wrong" } },
+      { finish: { hopeless: true } },
+    ]);
+    const s = new Session({ agent: a, defaultAdapter: fa, hooks: noopHooks });
+    await expect(s.run("")).rejects.toThrow(/did not produce a valid deliverable/);
+  });
+
+  it("accepts a deliverable corrected on a later attempt", async () => {
+    const p = phase({
+      name: "p1",
+      prompt: "go",
+      deliverable: { type: "object", properties: { x: { type: "number" } }, required: ["x"] } as const,
+    });
+    const a = agent({ name: "a", phases: [p] });
+    const fa = fakeAdapter([
+      { finish: { wrong: "shape" } },
+      { finish: { still: "wrong" } },
+      { finish: { x: 42 } },
+    ]);
+    const s = new Session({ agent: a, defaultAdapter: fa, hooks: noopHooks });
+    expect(await s.run("")).toEqual({ x: 42 });
+  });
+
   it("rejects unknown tool calls", async () => {
     const p = phase({
       name: "p1",

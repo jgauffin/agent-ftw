@@ -1,6 +1,6 @@
 # Interface: ChecklistDecl
 
-Defined in: declare/index.ts:169
+Defined in: [declare/index.ts:169](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L169)
 
 Optional LLM-as-judge gate run after a phase produces its deliverable.
 
@@ -17,7 +17,7 @@ phase's adapter. Created via [checklist](../functions/checklist.md).
 readonly kind: "checklist";
 ```
 
-Defined in: declare/index.ts:170
+Defined in: [declare/index.ts:170](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L170)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: declare/index.ts:170
 readonly prompt: string;
 ```
 
-Defined in: declare/index.ts:172
+Defined in: [declare/index.ts:172](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L172)
 
 System prompt for the checklist run. The deliverable is appended as user context.
 
@@ -39,7 +39,7 @@ System prompt for the checklist run. The deliverable is appended as user context
 readonly schema: JSONSchema;
 ```
 
-Defined in: declare/index.ts:174
+Defined in: [declare/index.ts:174](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L174)
 
 JSON Schema the checklist run must satisfy. Typical shape: `{ checks: [{ name, passed, evidence }] }`.
 
@@ -51,6 +51,6 @@ JSON Schema the checklist run must satisfy. Typical shape: `{ checks: [{ name, p
 readonly optional adapter?: Adapter;
 ```
 
-Defined in: declare/index.ts:176
+Defined in: [declare/index.ts:176](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L176)
 
 Adapter override for the verification run. Falls back to the phase's adapter.

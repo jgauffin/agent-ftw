@@ -173,6 +173,10 @@ const publish = phase({
 
 const newsroom = agent({
   name: "newsroom",
+  // Authority narrows going down: a sub-agent may only declare tools its parent
+  // hands down here. The researcher uses `search`, so the newsroom has to grant
+  // it. The fact-checker declares no tools, so it needs no grant.
+  delegable: [search],
   phases: [investigate, publish],
 });
 

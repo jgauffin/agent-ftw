@@ -1,6 +1,6 @@
 # Interface: SideQuestsDecl
 
-Defined in: declare/index.ts:146
+Defined in: [declare/index.ts:146](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L146)
 
 Per-agent configuration for agent-triggered side quests (feature B).
 
@@ -17,7 +17,7 @@ the approved tools and the configured deliverable schema.
 readonly mode: "off" | "agent";
 ```
 
-Defined in: declare/index.ts:148
+Defined in: [declare/index.ts:148](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L148)
 
 `"off"` disables the proposal tool; `"agent"` injects it on every phase.
 
@@ -29,7 +29,7 @@ Defined in: declare/index.ts:148
 readonly catalog: readonly ToolDecl[];
 ```
 
-Defined in: declare/index.ts:150
+Defined in: [declare/index.ts:150](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L150)
 
 Tools the agent may request. Approved subset is what the side quest actually gets.
 
@@ -41,7 +41,7 @@ Tools the agent may request. Approved subset is what the side quest actually get
 readonly deliverable: JSONSchema;
 ```
 
-Defined in: declare/index.ts:152
+Defined in: [declare/index.ts:152](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L152)
 
 JSON schema the side quest's deliverable must satisfy.
 
@@ -53,7 +53,7 @@ JSON schema the side quest's deliverable must satisfy.
 readonly optional turnBudget?: number;
 ```
 
-Defined in: declare/index.ts:154
+Defined in: [declare/index.ts:154](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L154)
 
 Turn budget for the synthesized side-quest phase. Default 20.
 
@@ -65,7 +65,7 @@ Turn budget for the synthesized side-quest phase. Default 20.
 readonly optional maxDepth?: number;
 ```
 
-Defined in: declare/index.ts:156
+Defined in: [declare/index.ts:156](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L156)
 
 Maximum nesting; default 1 — synthesized side quests cannot themselves spawn side quests.
 
@@ -77,6 +77,6 @@ Maximum nesting; default 1 — synthesized side quests cannot themselves spawn s
 readonly optional adapter?: Adapter;
 ```
 
-Defined in: declare/index.ts:158
+Defined in: [declare/index.ts:158](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L158)
 
 Adapter override for the synthesized side-quest agent. Falls back to the parent agent's adapter.

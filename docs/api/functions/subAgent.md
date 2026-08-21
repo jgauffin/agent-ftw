@@ -9,7 +9,7 @@ function subAgent(d: {
 }): SubAgentDecl;
 ```
 
-Defined in: declare/index.ts:326
+Defined in: [declare/index.ts:326](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L326)
 
 Define a sub-agent the parent can call as a tool. The sub-agent's pipeline
 runs as a child AgentRun; its final phase's deliverable becomes the tool

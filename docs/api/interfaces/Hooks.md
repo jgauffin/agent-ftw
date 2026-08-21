@@ -1,6 +1,6 @@
 # Interface: Hooks
 
-Defined in: hooks/index.ts:85
+Defined in: [hooks/index.ts:85](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L85)
 
 Host callbacks the framework invokes during a run. Required: `askUser`.
 Everything else is optional.
@@ -17,7 +17,7 @@ route the call appropriately.
 askUser(input: AskUserInput, ctx: AskCtx): Promise<AskUserResult>;
 ```
 
-Defined in: hooks/index.ts:87
+Defined in: [hooks/index.ts:87](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L87)
 
 Prompt the user. Calls are queued FIFO across concurrent agents in the same session.
 
@@ -40,7 +40,7 @@ Prompt the user. Calls are queued FIFO across concurrent agents in the same sess
 optional review(deliverable: unknown, ctx: ReviewCtx): Promise<void>;
 ```
 
-Defined in: hooks/index.ts:93
+Defined in: [hooks/index.ts:93](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L93)
 
 Drives the review chat. Resolves when the user approves the current deliverable.
 For each user chat message, call ctx.requestRevision(text) and surface the
@@ -65,7 +65,7 @@ returned deliverable in the UI.
 optional requestBudgetExtension(req: BudgetExtensionRequest): Promise<BudgetExtensionResponse>;
 ```
 
-Defined in: hooks/index.ts:100
+Defined in: [hooks/index.ts:100](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L100)
 
 Called when a phase exhausts its turn budget. The host decides whether to
 grant more turns (and how many), or to let the phase fail. If unset, an
@@ -90,7 +90,7 @@ fall back to a generic askUser prompt.
 optional trace(event: TraceEvent): void;
 ```
 
-Defined in: hooks/index.ts:102
+Defined in: [hooks/index.ts:102](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L102)
 
 Receives every [TraceEvent](../type-aliases/TraceEvent.md) the framework emits. See `createTracer`.
 

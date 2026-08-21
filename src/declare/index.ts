@@ -24,6 +24,15 @@ export interface ToolDecl {
   /** JSON Schema for the tool's input. Framework validates calls against this before dispatch. */
   readonly input: JSONSchema;
   /**
+   * Whether the tool changes anything outside the run: writes a file, calls a
+   * write API, runs a command with side effects. Only the tool's author knows,
+   * so it is declared rather than guessed.
+   *
+   * A coordinator may not hold a mutating tool — it delegates that authority
+   * instead of exercising it — so this is enforced at compile time.
+   */
+  readonly mutates?: boolean;
+  /**
    * Implementation. Receives the validated input and a context with cancellation,
    * `askUser`, and `emit`. Throw to surface an error result to the model.
    */
@@ -36,6 +45,16 @@ export interface ToolDecl {
 export interface ToolHandlerCtx {
   /** Aborts when the phase/session is cancelled. Forward to long-running awaits. */
   readonly signal: AbortSignal;
+  /**
+   * Paths the current run is allowed to write to, from the contract that
+   * created it. `undefined` means no contract narrowed it.
+   *
+   * A tool declared `mutates` should refuse anything outside this list. The
+   * framework checks that concurrent contracts do not overlap and that returned
+   * evidence stays inside, but it does not own the filesystem: this handler is
+   * the only place a write outside the set can actually be stopped.
+   */
+  readonly writeSet: readonly string[] | undefined;
   /**
    * Prompt the host user mid-handler. Calls go through the session's `Hooks.askUser`,
    * serialized FIFO so concurrent sub-agents don't race for the user.
@@ -85,6 +104,80 @@ export interface SubAgentDecl {
   readonly description: string;
   readonly input: JSONSchema;
   readonly agent: AgentDecl;
+  /**
+   * Checks a contracted child's return before the parent accepts it.
+   *
+   * Deliberately host TypeScript rather than another model call: a check that
+   * can be fooled by confident prose is not a check. Returning `ok: false`
+   * sends the child back with the reason, up to {@link SubAgentDecl.maxRejects}
+   * times, after which the work is abandoned and reported upward as partial.
+   *
+   * Only consulted when the child was started by a `delegate` contract.
+   */
+  readonly accept?: (
+    result: unknown,
+    evidence: readonly Evidence[],
+    ctx: AcceptanceCtx
+  ) => Promise<AcceptanceVerdict>;
+  /** How many times a rejected child may be sent back. Defaults to 1. */
+  readonly maxRejects?: number;
+}
+
+/**
+ * Something checkable a child offers in support of what it claims to have done:
+ * a file it wrote, a command it ran, a location it read. The parent verifies
+ * against these rather than against the child's description of its own work.
+ */
+export interface Evidence {
+  /** What kind of thing this points at. */
+  readonly kind: "file" | "command" | "citation" | "note";
+  /** The path, command line, or location. */
+  readonly ref: string;
+  /** Outcome or excerpt: an exit code, a matched line, a short quote. */
+  readonly detail?: string;
+}
+
+/** Context handed to {@link SubAgentDecl.accept}. */
+export interface AcceptanceCtx {
+  readonly childAgent: string;
+  /** What this child was contracted to achieve. */
+  readonly objective: string;
+  /**
+   * The objective as the child restated it. Compare against `objective`: a
+   * child that describes a different job than the one it was given has
+   * misread it, whatever its result looks like.
+   */
+  readonly restatement: string;
+  /** Paths the contract allowed it to write, if any. */
+  readonly writeSet: readonly string[] | undefined;
+  /** How many times this contract has already been rejected. */
+  readonly rejects: number;
+}
+
+/** Verdict from {@link SubAgentDecl.accept}. */
+export type AcceptanceVerdict =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly reason: string };
+
+/** How a contracted child finished. */
+export type ContractStatus = "ok" | "partial" | "blocked";
+
+/**
+ * What a contracted child returns: its declared deliverable wrapped in a status
+ * and the evidence for it.
+ *
+ * `blocked` is a first-class outcome, not a failure. A child that cannot
+ * resolve an ambiguity says so and hands the decision up, rather than inventing
+ * an answer and burying the guess in a plausible result.
+ */
+export interface ContractEnvelope {
+  /** The objective as the child understood it. Compare against what you asked. */
+  readonly restatement?: string;
+  readonly status: ContractStatus;
+  readonly result?: unknown;
+  readonly evidence?: readonly Evidence[];
+  /** Why it is blocked, or what is missing from a partial result. */
+  readonly note?: string;
 }
 
 /**
@@ -157,6 +250,83 @@ export interface SideQuestsDecl {
   /** Adapter override for the synthesized side-quest agent. Falls back to the parent agent's adapter. */
   readonly adapter?: Adapter;
 }
+
+/**
+ * Framework-internal: the auto-injected `delegate` tool. Created by compile for
+ * every phase of a `role: "coordinator"` agent, except at the depth limit where
+ * it is withheld entirely — that is what stops a coordinator tree from
+ * recursing without bound.
+ *
+ * The model sees a normal tool taking a batch of {@link Contract}s. Dispatch
+ * validates the whole batch before starting any of it.
+ */
+export interface DelegateDecl {
+  readonly kind: "delegate";
+  readonly name: string;
+  readonly description: string;
+  readonly input: JSONSchema;
+  /** Sub-agents this coordinator may contract, by tool name. */
+  readonly children: ReadonlyMap<string, SubAgentDecl>;
+  /** Tools this coordinator may grant, by name. */
+  readonly delegable: ReadonlyMap<string, ToolDecl>;
+}
+
+/**
+ * One unit of delegated work, filled in by the coordinator model.
+ *
+ * Every field is bounded by what the coordinator statically declared, so the
+ * model can only ever narrow: it cannot grant a tool the agent may not hand
+ * down, and it cannot allocate turns the agent does not hold.
+ */
+export interface Contract {
+  /** Which declared sub-agent does the work. */
+  readonly childAgent: string;
+  /** This child's narrow goal, in the coordinator's own words. */
+  readonly objective: string;
+  /** Validated against the sub-agent's declared input schema. */
+  readonly input: unknown;
+  /**
+   * Tools the child may use, a subset of the coordinator's `delegable`.
+   * Omitted means "everything the child declares", which compile already
+   * bounded.
+   */
+  readonly grants?: readonly string[];
+  /**
+   * Paths the child may write to. Required once any granted tool mutates.
+   * Contracts with overlapping write-sets are run one after another rather
+   * than together, so two children never write the same place at once.
+   */
+  readonly writeSet?: readonly string[];
+  /**
+   * Keys of earlier children's results this child may read, using the
+   * `read_artifact` tool. This is how one child's output reaches another
+   * without the two of them talking, and without the payload passing through
+   * the coordinator's own context.
+   *
+   * A key it was not given is not readable.
+   */
+  readonly reads?: readonly string[];
+  /** Turns allocated to this child, taken from the coordinator's balance. */
+  readonly turns: number;
+  /**
+   * Ceiling the framework may top the child up to, drawn from the
+   * coordinator's remaining balance, without asking anyone.
+   *
+   * Authorising this up front is deliberate: waking a coordinator's model loop
+   * to adjudicate a child's overrun costs turns and turns into an open-ended
+   * negotiation that a stuck child always wins. Past the ceiling the child
+   * stops and returns `partial`, and the coordinator decides what to do.
+   *
+   * Defaults to `turns`, meaning no top-up.
+   */
+  readonly maxTurns?: number;
+}
+
+/** Well-known name for the auto-injected delegation tool. */
+export const DELEGATE_TOOL_NAME = "delegate";
+
+/** Well-known name for the reader a contract's `reads` grants a child. */
+export const READ_ARTIFACT_TOOL_NAME = "read_artifact";
 
 /**
  * Optional LLM-as-judge gate run after a phase produces its deliverable.
@@ -274,6 +444,26 @@ export interface AgentDecl {
   /** Agent name. Surfaces in traces and persistence paths. */
   readonly name: string;
   /**
+   * What this agent is for. A `worker` does the work. A `coordinator` decides
+   * who does it: it may not hold a mutating tool, so it cannot quietly abandon
+   * its own plan and start editing things itself.
+   *
+   * Defaults to `"worker"`.
+   */
+  readonly role?: AgentRole;
+  /**
+   * Tools this agent may hand **down** to its sub-agents, as opposed to
+   * `tools`, which is what it may call itself. A sub-agent may only declare
+   * tools its parent listed here, so authority narrows with depth and a leaf
+   * can never hold something no ancestor was allowed to grant.
+   *
+   * The two lists are separate so a coordinator that holds nothing mutating can
+   * still put edit authority in a leaf.
+   *
+   * Defaults to `[]`, which means "hands nothing down".
+   */
+  readonly delegable?: readonly ToolDecl[];
+  /**
    * Adapter override for every phase in this agent. Falls back to the session's
    * `defaultAdapter`; for a sub-agent, falls back to the parent agent's adapter.
    * Individual phases and checklists can override it further.
@@ -307,6 +497,7 @@ export function tool<O>(d: {
   name: string;
   description: string;
   input: JSONSchema;
+  mutates?: boolean;
   handler: (input: unknown, ctx: ToolHandlerCtx) => Promise<O>;
 }): ToolDecl {
   return {
@@ -314,6 +505,7 @@ export function tool<O>(d: {
     name: d.name,
     description: d.description,
     input: d.input,
+    ...(d.mutates !== undefined ? { mutates: d.mutates } : {}),
     handler: d.handler as ToolDecl["handler"],
   };
 }
@@ -328,6 +520,12 @@ export function subAgent(d: {
   description: string;
   input: JSONSchema;
   agent: AgentDecl;
+  accept?: (
+    result: unknown,
+    evidence: readonly Evidence[],
+    ctx: AcceptanceCtx
+  ) => Promise<AcceptanceVerdict>;
+  maxRejects?: number;
 }): SubAgentDecl {
   return {
     kind: "subAgent",
@@ -335,6 +533,8 @@ export function subAgent(d: {
     description: d.description,
     input: d.input,
     agent: d.agent,
+    ...(d.accept !== undefined ? { accept: d.accept } : {}),
+    ...(d.maxRejects !== undefined ? { maxRejects: d.maxRejects } : {}),
   };
 }
 
@@ -428,20 +628,33 @@ export function phase(d: {
  */
 export function agent(d: {
   name: string;
+  role?: AgentRole;
   adapter?: Adapter;
   tools?: readonly (ToolDecl | SubAgentDecl | CustomSubAgentDecl)[];
+  delegable?: readonly ToolDecl[];
   phases: readonly PhaseDecl[];
   sideQuests?: SideQuestsDecl;
 }): AgentDecl {
   return {
     kind: "agent",
     name: d.name,
+    ...(d.role !== undefined ? { role: d.role } : {}),
     ...(d.adapter !== undefined ? { adapter: d.adapter } : {}),
     tools: d.tools ?? [],
+    ...(d.delegable !== undefined ? { delegable: d.delegable } : {}),
     phases: d.phases,
     ...(d.sideQuests !== undefined ? { sideQuests: d.sideQuests } : {}),
   };
 }
 
+/**
+ * Whether an agent does the work or decides who does it. See
+ * {@link AgentDecl.role}.
+ */
+export type AgentRole = "worker" | "coordinator";
+
 /** Well-known name for the auto-injected agent-triggered side-quest proposal tool. */
 export const SIDE_QUEST_TOOL_NAME = "propose_side_quest";
+
+/** Turn budget applied to a phase that does not declare its own. */
+export const DEFAULT_TURN_BUDGET = 30;

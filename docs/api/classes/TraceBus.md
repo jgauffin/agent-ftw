@@ -1,6 +1,6 @@
 # Class: TraceBus
 
-Defined in: trace/index.ts:66
+Defined in: [trace/index.ts:66](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/trace/index.ts#L66)
 
 Internal bus that timestamps and dispatches [TraceEvent](../type-aliases/TraceEvent.md)s to the host's
 [TraceCallback](../type-aliases/TraceCallback.md). Exceptions thrown by the callback are swallowed so
@@ -16,7 +16,7 @@ Hosts almost never construct this directly — set `Hooks.trace` instead.
 new TraceBus(cb: TraceCallback): TraceBus;
 ```
 
-Defined in: trace/index.ts:67
+Defined in: [trace/index.ts:67](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/trace/index.ts#L67)
 
 #### Parameters
 
@@ -240,7 +240,7 @@ emit(event:
 }, "ts">): void;
 ```
 
-Defined in: trace/index.ts:70
+Defined in: [trace/index.ts:70](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/trace/index.ts#L70)
 
 Emit an event. The bus adds `ts` automatically; pass the rest as-is.
 

@@ -1,6 +1,7 @@
 import type { AgentRun } from "./agent-run.js";
-import type { CompiledPhase } from "../compile/index.js";
+import type { CompiledPhase, ExposedTool } from "../compile/index.js";
 import { validate } from "../compile/index.js";
+import { runDelegate } from "./delegate.js";
 import { validateAgainstSchema as validateSchema } from "../schema/index.js";
 import type {
   ToolDecl,
@@ -76,7 +77,7 @@ export async function dispatchTool(args: {
 }
 
 async function dispatchByKind(
-  tool: ToolDecl | SubAgentDecl | CustomSubAgentDecl | SideQuestProposalDecl,
+  tool: ExposedTool,
   input: unknown,
   agentRun: AgentRun,
   phase: CompiledPhase,
@@ -91,6 +92,8 @@ async function dispatchByKind(
       return await runCustomSubAgent(tool, input, agentRun, phase, callId);
     case "sideQuestProposal":
       return await runSideQuest(tool, input, agentRun, phase);
+    case "delegate":
+      return await runDelegate(tool, input, agentRun, phase);
   }
 }
 
@@ -103,6 +106,10 @@ async function runTool(
 ): Promise<unknown> {
   return await tool.handler(input as never, {
     signal: agentRun.signal,
+    // The contract that created this run decides where it may write. A mutating
+    // tool is the only place a bad path can actually be stopped, so it gets the
+    // list rather than being trusted to stay inside it.
+    writeSet: agentRun.writeSet,
     askUser: (askInput) =>
       agentRun.session.askUser(askInput, {
         agent: agentRun.agentName,

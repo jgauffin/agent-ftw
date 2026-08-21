@@ -11,7 +11,7 @@ type PhaseTerminator =
 };
 ```
 
-Defined in: declare/index.ts:203
+Defined in: [declare/index.ts:203](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L203)
 
 How a phase decides it is finished.
 

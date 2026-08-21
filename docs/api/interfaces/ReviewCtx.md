@@ -1,6 +1,6 @@
 # Interface: ReviewCtx
 
-Defined in: hooks/index.ts:19
+Defined in: [hooks/index.ts:19](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L19)
 
 Context for a [Hooks.review](Hooks.md#review) callback. The host drives a chat loop with
 the user; for each user message it calls `requestRevision`, which re-runs
@@ -15,7 +15,7 @@ the phase and returns the revised deliverable. Resolving the callback (with
 readonly agent: string;
 ```
 
-Defined in: hooks/index.ts:20
+Defined in: [hooks/index.ts:20](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L20)
 
 ***
 
@@ -25,7 +25,7 @@ Defined in: hooks/index.ts:20
 readonly phase: string;
 ```
 
-Defined in: hooks/index.ts:21
+Defined in: [hooks/index.ts:21](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L21)
 
 ## Methods
 
@@ -35,7 +35,7 @@ Defined in: hooks/index.ts:21
 requestRevision(userMessage: string): Promise<unknown>;
 ```
 
-Defined in: hooks/index.ts:27
+Defined in: [hooks/index.ts:27](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/hooks/index.ts#L27)
 
 Re-run the phase with a user message appended to the context.
 Returns the agent's revised deliverable. Call once per user message during review.

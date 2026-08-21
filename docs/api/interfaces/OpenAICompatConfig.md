@@ -1,6 +1,6 @@
 # Interface: OpenAICompatConfig
 
-Defined in: adapters/openai-compat.ts:41
+Defined in: [adapters/openai-compat.ts:41](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/openai-compat.ts#L41)
 
 Configuration for [openaiCompatAdapter](../functions/openaiCompatAdapter.md). Works with any endpoint that
 implements the OpenAI `/chat/completions` shape: OpenAI itself, Ollama
@@ -14,7 +14,7 @@ implements the OpenAI `/chat/completions` shape: OpenAI itself, Ollama
 readonly baseUrl: string;
 ```
 
-Defined in: adapters/openai-compat.ts:43
+Defined in: [adapters/openai-compat.ts:43](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/openai-compat.ts#L43)
 
 Base URL ending in `/v1`. E.g. `http://localhost:11434/v1`.
 
@@ -26,7 +26,7 @@ Base URL ending in `/v1`. E.g. `http://localhost:11434/v1`.
 readonly model: string;
 ```
 
-Defined in: adapters/openai-compat.ts:45
+Defined in: [adapters/openai-compat.ts:45](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/openai-compat.ts#L45)
 
 Model id sent in the `model` field of the request.
 
@@ -38,7 +38,7 @@ Model id sent in the `model` field of the request.
 readonly optional apiKey?: string;
 ```
 
-Defined in: adapters/openai-compat.ts:47
+Defined in: [adapters/openai-compat.ts:47](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/openai-compat.ts#L47)
 
 Optional bearer token. Skip for local endpoints that don't need auth.
 
@@ -50,7 +50,7 @@ Optional bearer token. Skip for local endpoints that don't need auth.
 readonly optional temperature?: number;
 ```
 
-Defined in: adapters/openai-compat.ts:48
+Defined in: [adapters/openai-compat.ts:48](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/openai-compat.ts#L48)
 
 ***
 
@@ -63,7 +63,7 @@ readonly optional fetch?: {
 };
 ```
 
-Defined in: adapters/openai-compat.ts:50
+Defined in: [adapters/openai-compat.ts:50](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/openai-compat.ts#L50)
 
 Inject a custom `fetch` implementation. Tests use this; production code rarely needs to.
 

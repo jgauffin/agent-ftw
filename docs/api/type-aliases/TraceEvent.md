@@ -208,7 +208,7 @@ type TraceEvent =
 };
 ```
 
-Defined in: trace/index.ts:23
+Defined in: [trace/index.ts:23](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/trace/index.ts#L23)
 
 Discriminated union of every event the framework emits on the trace bus.
 

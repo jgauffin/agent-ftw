@@ -1,6 +1,6 @@
 # Interface: ToolSpec
 
-Defined in: adapters/types.ts:28
+Defined in: [adapters/types.ts:28](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L28)
 
 Per-tool descriptor adapters receive on `RunContext.tools`. This is the
 framework-normalized view; adapters convert it to provider-native shapes
@@ -14,7 +14,7 @@ framework-normalized view; adapters convert it to provider-native shapes
 readonly name: string;
 ```
 
-Defined in: adapters/types.ts:29
+Defined in: [adapters/types.ts:29](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L29)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: adapters/types.ts:29
 readonly description: string;
 ```
 
-Defined in: adapters/types.ts:30
+Defined in: [adapters/types.ts:30](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L30)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: adapters/types.ts:30
 readonly input: JSONSchema;
 ```
 
-Defined in: adapters/types.ts:31
+Defined in: [adapters/types.ts:31](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/adapters/types.ts#L31)

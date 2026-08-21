@@ -1,10 +1,18 @@
 import type { CompiledAgent } from "../compile/index.js";
-import { validate } from "../compile/index.js";
+import {
+  validate,
+  DEFAULT_MAX_DEPTH,
+  DEFAULT_MAX_FAN_OUT,
+  DEFAULT_MAX_BATCHES,
+  DEFAULT_MAX_EMPTY_BATCHES,
+} from "../compile/index.js";
 import type { AgentDecl, AskUserInput, AskUserResult } from "../declare/index.js";
 import type { Adapter } from "../adapters/types.js";
 import { TraceBus } from "../trace/index.js";
 import type { Hooks } from "../hooks/index.js";
-import { AgentRun } from "./agent-run.js";
+import { AgentRun, ROOT_RUN_PATH } from "./agent-run.js";
+import { TurnLedger } from "./ledger.js";
+import { ArtifactStore } from "./artifact-store.js";
 import { SessionStore } from "./session-store.js";
 import type { SessionInfo } from "./session-store.js";
 
@@ -73,6 +81,38 @@ export interface SessionOptions {
    * from the persisted phase boundary. Has no effect without `sessionDirectory`.
    */
   sessionId?: string;
+  /**
+   * Hard ceiling on model turns for the **entire run tree**, sub-agents
+   * included. A phase's own `turnBudget` caps that one phase's loop; this caps
+   * everything, so no arrangement of nested sub-agents can spend more than
+   * this. Only `Hooks.requestBudgetExtension` can raise it mid-run.
+   *
+   * Omit to leave the tree ungoverned, which is the historical behaviour.
+   */
+  turnBudget?: number;
+  /**
+   * How deep the run tree may go. The root agent is depth 0. Enforced when the
+   * agent is compiled, so an over-deep tree fails before it runs rather than
+   * during it.
+   */
+  maxDepth?: number;
+  /**
+   * How many children one coordinator run may contract, counted across every
+   * `delegate` batch it issues rather than per batch.
+   */
+  maxFanOut?: number;
+  /**
+   * How many `delegate` batches one coordinator run may issue. Re-planning is
+   * legitimate; re-planning without end is a coordinator that has lost the
+   * thread.
+   */
+  maxBatches?: number;
+  /**
+   * How many batches in a row may produce nothing accepted before the
+   * coordinator is stopped from delegating again. Catches a tree that is
+   * spinning rather than converging.
+   */
+  maxEmptyBatches?: number;
 }
 
 /**
@@ -102,6 +142,26 @@ export class Session {
    * @internal
    */
   readonly store: SessionStore | undefined;
+  /**
+   * Turn accounting for the whole run tree. Sub-agents draw from the root pool
+   * unless they hold a balance of their own.
+   * @internal
+   */
+  readonly ledger: TurnLedger;
+  /**
+   * Accepted results from contracted children, so a later contract can be given
+   * a key to read rather than the payload itself.
+   * @internal
+   */
+  readonly artifacts: ArtifactStore;
+  /** Depth limit for the run tree, applied when sub-agents are compiled. */
+  readonly maxDepth: number;
+  /** Cap on children contracted by any one coordinator run. */
+  readonly maxFanOut: number;
+  /** Cap on delegate batches issued by any one coordinator run. */
+  readonly maxBatches: number;
+  /** Consecutive fruitless batches tolerated before delegation is refused. */
+  readonly maxEmptyBatches: number;
   private readonly abort: AbortController;
   private readonly compiled: CompiledAgent;
   /** Every distinct adapter referenced anywhere in the pipeline — disposed together. */
@@ -111,9 +171,13 @@ export class Session {
 
   constructor(opts: SessionOptions) {
     const a = opts.agent;
+    this.maxDepth = opts.maxDepth ?? DEFAULT_MAX_DEPTH;
+    this.maxFanOut = opts.maxFanOut ?? DEFAULT_MAX_FAN_OUT;
+    this.maxBatches = opts.maxBatches ?? DEFAULT_MAX_BATCHES;
+    this.maxEmptyBatches = opts.maxEmptyBatches ?? DEFAULT_MAX_EMPTY_BATCHES;
     this.compiled = "phases" in a && Array.isArray((a as { phases: unknown }).phases) && "toolsByName" in (a as object)
       ? (a as CompiledAgent)
-      : validate(a as AgentDecl);
+      : validate(a as AgentDecl, { maxDepth: this.maxDepth });
     this.defaultAdapter = opts.defaultAdapter;
     this.allAdapters = collectAdapters(this.compiled, this.defaultAdapter);
     this.hooks = opts.hooks;
@@ -134,6 +198,9 @@ export class Session {
     });
     this.abort = new AbortController();
     this.signal = this.abort.signal;
+    this.ledger = new TurnLedger();
+    this.ledger.createRoot(ROOT_RUN_PATH, opts.turnBudget ?? Infinity);
+    this.artifacts = new ArtifactStore();
   }
 
   /**

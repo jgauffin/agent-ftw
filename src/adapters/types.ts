@@ -44,6 +44,14 @@ export interface ToolSpec {
  *  - dispatch tool calls via `dispatchTool(name, input, callId)` — never run
  *    handlers themselves
  *  - return when (and only when) the model calls `phaseEndToolName`
+ *
+ * NOT a UI surface. `RunContext` is for **adapter implementers**. The sync
+ * callbacks (`onTurn`, `consumeTurn`) run on the adapter's hot loop and must
+ * stay sync — they are not subscription points. Hosts that need to render
+ * chat, stream tokens, or react to turns should implement `Hooks.trace` and
+ * listen for `model.turn` events instead (see `src/trace/index.ts`). To grant
+ * more turns when the budget is exhausted, implement
+ * `Hooks.requestBudgetExtension` — there is no extension knob on `RunContext`.
  */
 export interface RunContext {
   readonly systemPrompt: string;
@@ -54,15 +62,28 @@ export interface RunContext {
   readonly signal: AbortSignal;
   /** Framework dispatches the tool. Adapter never executes handlers. */
   dispatchTool(name: string, input: unknown, callId: string): Promise<unknown>;
-  /** Adapter calls this for every model/tool turn so trace can observe. */
+  /**
+   * Adapter calls this for every model/tool turn so trace and persistence can
+   * observe. Sync by design — runs on the adapter's hot loop. Hosts must not
+   * use this as a UI hook; subscribe to `Hooks.trace` (`model.turn`) instead.
+   */
   onTurn(turn: Turn): void;
-  /** Adapter calls before each model turn; throws if budget is exhausted. Returns granted turns. */
+  /**
+   * Adapter calls before each model turn; throws `TurnBudgetExhausted` if the
+   * budget is exhausted. Sync — do not await UI here. To make exhaustion
+   * recoverable, implement `Hooks.requestBudgetExtension`; the framework calls
+   * it after this throws and retries on grant.
+   */
   consumeTurn(): void;
   /**
-   * If set, the adapter MUST call this when the model emits a turn that has
-   * text but no tool calls — instead of nudging the model with a "you must call
-   * X" message. The returned string becomes the next user turn. To abort,
-   * throw or fire the abort signal.
+   * The adapter MUST call this when the model emits a turn that has text but
+   * no tool calls, instead of composing its own "you must call X" nudge. The
+   * returned string becomes the next user turn. To abort, throw or fire the
+   * abort signal.
+   *
+   * The framework always supplies it, so nudge wording and the resulting
+   * `phase.nudged` / `phase.assistantText` trace events stay framework-owned.
+   * Optional only so a hand-built `RunContext` (adapter tests) can omit it.
    */
   onAssistantText?(text: string): Promise<string>;
   /**
@@ -128,12 +149,17 @@ export interface Adapter {
 }
 
 /**
- * Raised when a phase exceeds its `turnBudget` and the host either has no
+ * Raised when a turn budget runs out and the host either has no
  * `requestBudgetExtension` hook or denies the request.
+ *
+ * `limit` says which ceiling was hit: `"phase"` is the phase's own
+ * `turnBudget`, `"run"` is the session-wide budget shared by the entire run
+ * tree. The distinction matters because raising a phase budget does nothing
+ * when the run budget is what ran dry.
  */
 export class TurnBudgetExhausted extends Error {
-  constructor() {
-    super("turn budget exhausted");
+  constructor(readonly limit: "phase" | "run" = "phase") {
+    super(limit === "run" ? "run turn budget exhausted" : "turn budget exhausted");
     this.name = "TurnBudgetExhausted";
   }
 }

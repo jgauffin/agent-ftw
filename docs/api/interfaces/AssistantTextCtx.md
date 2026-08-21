@@ -1,6 +1,6 @@
 # Interface: AssistantTextCtx
 
-Defined in: declare/index.ts:214
+Defined in: [declare/index.ts:214](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L214)
 
 Context passed to [OnAssistantText](../type-aliases/OnAssistantText.md) when the model emits text without
 any tool calls.
@@ -13,7 +13,7 @@ any tool calls.
 readonly agent: string;
 ```
 
-Defined in: declare/index.ts:215
+Defined in: [declare/index.ts:215](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L215)
 
 ***
 
@@ -23,7 +23,7 @@ Defined in: declare/index.ts:215
 readonly phase: string;
 ```
 
-Defined in: declare/index.ts:216
+Defined in: [declare/index.ts:216](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L216)
 
 ***
 
@@ -33,7 +33,7 @@ Defined in: declare/index.ts:216
 readonly runId: string;
 ```
 
-Defined in: declare/index.ts:217
+Defined in: [declare/index.ts:217](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L217)
 
 ***
 
@@ -43,4 +43,4 @@ Defined in: declare/index.ts:217
 readonly signal: AbortSignal;
 ```
 
-Defined in: declare/index.ts:218
+Defined in: [declare/index.ts:218](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L218)

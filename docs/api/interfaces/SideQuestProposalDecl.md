@@ -1,6 +1,6 @@
 # Interface: SideQuestProposalDecl
 
-Defined in: declare/index.ts:130
+Defined in: [declare/index.ts:130](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L130)
 
 Framework-internal: the auto-injected `propose_side_quest` tool. Created by
 compile when an AgentDecl declares `sideQuests.mode === "agent"`. The model
@@ -15,7 +15,7 @@ synthesized child AgentRun against the approved tool subset).
 readonly kind: "sideQuestProposal";
 ```
 
-Defined in: declare/index.ts:131
+Defined in: [declare/index.ts:131](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L131)
 
 ***
 
@@ -25,7 +25,7 @@ Defined in: declare/index.ts:131
 readonly name: string;
 ```
 
-Defined in: declare/index.ts:132
+Defined in: [declare/index.ts:132](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L132)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: declare/index.ts:132
 readonly description: string;
 ```
 
-Defined in: declare/index.ts:133
+Defined in: [declare/index.ts:133](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L133)
 
 ***
 
@@ -45,7 +45,7 @@ Defined in: declare/index.ts:133
 readonly input: JSONSchema;
 ```
 
-Defined in: declare/index.ts:134
+Defined in: [declare/index.ts:134](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L134)
 
 ***
 
@@ -55,4 +55,4 @@ Defined in: declare/index.ts:134
 readonly spec: SideQuestsDecl;
 ```
 
-Defined in: declare/index.ts:135
+Defined in: [declare/index.ts:135](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L135)

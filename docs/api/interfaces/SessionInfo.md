@@ -1,6 +1,6 @@
 # Interface: SessionInfo
 
-Defined in: runtime/session-store.ts:30
+Defined in: [runtime/session-store.ts:30](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L30)
 
 Read-only snapshot returned by [Session.listSessions](../classes/Session.md#listsessions). Carries the
 fields a host UI typically renders (creation/update timestamps, current
@@ -14,7 +14,7 @@ phase, completion progress) without exposing adapter-internal metadata.
 readonly sessionId: string;
 ```
 
-Defined in: runtime/session-store.ts:31
+Defined in: [runtime/session-store.ts:31](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L31)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: runtime/session-store.ts:31
 readonly agentName: string;
 ```
 
-Defined in: runtime/session-store.ts:32
+Defined in: [runtime/session-store.ts:32](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L32)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: runtime/session-store.ts:32
 readonly createdAt: number;
 ```
 
-Defined in: runtime/session-store.ts:33
+Defined in: [runtime/session-store.ts:33](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L33)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: runtime/session-store.ts:33
 readonly updatedAt: number;
 ```
 
-Defined in: runtime/session-store.ts:34
+Defined in: [runtime/session-store.ts:34](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L34)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: runtime/session-store.ts:34
 readonly status: "error" | "running" | "complete" | "aborted";
 ```
 
-Defined in: runtime/session-store.ts:35
+Defined in: [runtime/session-store.ts:35](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L35)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: runtime/session-store.ts:35
 readonly currentPhase: string | null;
 ```
 
-Defined in: runtime/session-store.ts:36
+Defined in: [runtime/session-store.ts:36](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L36)
 
 ***
 
@@ -74,4 +74,4 @@ Defined in: runtime/session-store.ts:36
 readonly completedPhases: readonly string[];
 ```
 
-Defined in: runtime/session-store.ts:37
+Defined in: [runtime/session-store.ts:37](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/runtime/session-store.ts#L37)

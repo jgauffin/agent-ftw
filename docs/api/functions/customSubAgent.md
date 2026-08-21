@@ -10,7 +10,7 @@ function customSubAgent(d: {
 }): CustomSubAgentDecl;
 ```
 
-Defined in: declare/index.ts:346
+Defined in: [declare/index.ts:346](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L346)
 
 Define a custom-handler sub-agent. The handler runs TypeScript directly
 (instead of a phased pipeline) and may spawn nested child agents via

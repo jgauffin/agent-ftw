@@ -19,7 +19,7 @@ function phase(d: {
 }): PhaseDecl;
 ```
 
-Defined in: declare/index.ts:387
+Defined in: [declare/index.ts:387](https://github.com/jgauffin/agent-ftw/blob/2fa588093ad3cc257029a5a0e892ba05c841dcf3/src/declare/index.ts#L387)
 
 Define a phase. Optional fields default sensibly:
  - `tools` defaults to `[]` (the agent's global tools are still available)

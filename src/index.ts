@@ -1,6 +1,7 @@
 export * from "./declare/index.js";
 export * from "./schema/index.js";
 export * from "./compile/index.js";
+export * from "./lint/index.js";
 export * from "./trace/index.js";
 export { createTracer } from "./trace/tracer.js";
 export type { TracerOptions } from "./trace/tracer.js";

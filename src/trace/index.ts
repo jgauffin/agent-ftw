@@ -9,13 +9,15 @@ import type { JSONSchema } from "../schema/index.js";
  *
  * Categories:
  *  - `agent.*` — lifecycle of a single AgentRun (top-level or sub-agent)
- *  - `phase.*` — phase boundaries, model utterances, external termination
+ *  - `phase.*` — phase boundaries, model utterances, nudges, external termination
  *  - `model.turn` — every model/tool turn (mostly for low-level transcripts)
  *  - `tool.*` — tool dispatch, results, errors, and incremental progress
+ *  - `deliverable.rejected` — a phase's payload failed its schema and is being retried
  *  - `checklist.*` — checklist runs and outcomes
  *  - `review.*` — human-review chat for `phase.review = true`
  *  - `askUser` — host user prompts (queued FIFO)
  *  - `budget.*` — turn-budget exhaustion and host-granted extensions
+ *  - `delegate.*` / `contract.*` — coordinator delegation batches and the children they contract
  *  - `sideQuest.*` — agent-proposed side quests (catalog approval flow)
  *  - `fork.created` — `Session.fork` lineage marker
  *  - `cancelled` — session/run cancellation
@@ -32,6 +34,8 @@ export type TraceEvent =
   | { type: "tool.error"; agent: string; phase: string; runId: string; tool: string; error: string; callId: string; ts: number }
   | { type: "tool.event"; agent: string; phase: string; runId: string; tool: string; callId: string; payload: unknown; ts: number }
   | { type: "phase.assistantText"; agent: string; phase: string; runId: string; text: string; ts: number }
+  | { type: "deliverable.rejected"; agent: string; phase: string; runId: string; attempt: number; errors: readonly string[]; ts: number }
+  | { type: "phase.nudged"; agent: string; phase: string; runId: string; text: string; ts: number }
   | { type: "phase.externalTerminated"; agent: string; phase: string; runId: string; ts: number }
   | { type: "checklist.run"; agent: string; phase: string; runId: string; result: unknown; ts: number }
   | { type: "checklist.failed"; agent: string; phase: string; runId: string; failures: unknown; ts: number }
@@ -39,11 +43,19 @@ export type TraceEvent =
   | { type: "review.message"; agent: string; phase: string; runId: string; from: "user" | "agent"; text: string; ts: number }
   | { type: "review.approved"; agent: string; phase: string; runId: string; ts: number }
   | { type: "askUser"; agent: string; phase: string; runId: string; prompt: string; options: readonly string[]; result: unknown; ts: number }
-  | { type: "budget.exhausted"; agent: string; phase: string; runId: string; ts: number }
-  | { type: "budget.extended"; agent: string; phase: string; runId: string; by: number; ts: number }
+  | { type: "budget.exhausted"; agent: string; phase: string; runId: string; limit: "phase" | "run"; ts: number }
+  | { type: "budget.extended"; agent: string; phase: string; runId: string; by: number; limit: "phase" | "run"; ts: number }
   | { type: "sideQuest.proposed"; agent: string; phase: string; runId: string; goal: string; rationale: string; requestedTools: readonly string[]; ts: number }
   | { type: "sideQuest.declined"; agent: string; phase: string; runId: string; reason: string; ts: number }
   | { type: "sideQuest.approved"; agent: string; phase: string; runId: string; approvedTools: readonly string[]; ts: number }
+  | { type: "delegate.batch"; agent: string; phase: string; runId: string; contracts: readonly { childAgent: string; objective: string; turns: number; writeSet: readonly string[] }[]; waves: number; ts: number }
+  | { type: "delegate.rejected"; agent: string; phase: string; runId: string; problems: readonly { index: number; childAgent: string; reason: string }[]; ts: number }
+  | { type: "contract.start"; agent: string; phase: string; runId: string; parentRunId: string; childAgent: string; objective: string; turns: number; ts: number }
+  | { type: "contract.end"; agent: string; phase: string; runId: string; parentRunId: string; childAgent: string; ts: number }
+  | { type: "contract.accepted"; agent: string; phase: string; runId: string; childAgent: string; objective: string; reason: string; attempt: number; ts: number }
+  | { type: "contract.rejected"; agent: string; phase: string; runId: string; childAgent: string; objective: string; reason: string; attempt: number; ts: number }
+  | { type: "contract.abandoned"; agent: string; phase: string; runId: string; childAgent: string; objective: string; reason: string; attempt: number; ts: number }
+  | { type: "contract.blocked"; agent: string; phase: string; runId: string; childAgent: string; objective: string; reason: string; attempt: number; ts: number }
   | { type: "fork.created"; parentSessionId: string; childSessionId: string; seed: "deliverable" | "summarize"; ts: number }
   | { type: "cancelled"; runId: string; reason: string; ts: number };
 

@@ -22,7 +22,11 @@
 
 import { agent, phase, subAgent, tool } from "../src/declare/index.js";
 import { Session } from "../src/runtime/session.js";
-import { makeAdapter, makeHooks } from "./shared.js";
+import { makeAdapter, makeHooks, runIfMain } from "./shared.js";
+
+// Exported so tooling that reads this file (the studio, a test) gets the same
+// model this example runs against, instead of substituting one of its own.
+export const adapter = makeAdapter();
 
 // ---------- shared fake "data source" tool ----------
 const search = tool({
@@ -46,7 +50,7 @@ const search = tool({
 });
 
 // ---------- inner agent #1: researcher ----------
-const researcher = agent({
+export const researcher = agent({
   name: "researcher",
   // Sub-agent with its own adapter override — runs on a separate instance.
   adapter: makeAdapter(),
@@ -69,7 +73,7 @@ const researcher = agent({
 });
 
 // ---------- inner agent #2: fact-checker ----------
-const factChecker = agent({
+export const factChecker = agent({
   name: "fact_checker",
   // No adapter set — inherits the parent agent's adapter (the Session default).
   phases: [
@@ -171,7 +175,7 @@ const publish = phase({
   } as const,
 });
 
-const newsroom = agent({
+export const newsroom = agent({
   name: "newsroom",
   // Authority narrows going down: a sub-agent may only declare tools its parent
   // hands down here. The researcher uses `search`, so the newsroom has to grant
@@ -183,7 +187,7 @@ const newsroom = agent({
 async function main(): Promise<void> {
   const session = new Session({
     agent: newsroom,
-    defaultAdapter: makeAdapter(),
+    defaultAdapter: adapter,
     hooks: makeHooks(),
   });
   try {
@@ -194,7 +198,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  (globalThis as { process?: { exit?: (n: number) => void } }).process?.exit?.(1);
-});
+runIfMain(import.meta.url, main);

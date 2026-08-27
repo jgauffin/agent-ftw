@@ -10,7 +10,11 @@
 
 import { agent, phase } from "../src/declare/index.js";
 import { Session } from "../src/runtime/session.js";
-import { makeAdapter, makeHooks } from "./shared.js";
+import { makeAdapter, makeHooks, runIfMain } from "./shared.js";
+
+// Exported so tooling that reads this file (the studio, a test) gets the same
+// model this example runs against, instead of substituting one of its own.
+export const adapter = makeAdapter();
 
 const brainstorm = phase({
   name: "brainstorm",
@@ -57,7 +61,7 @@ const pickBest = phase({
   } as const,
 });
 
-const planner = agent({
+export const planner = agent({
   name: "planner",
   phases: [brainstorm, pickBest],
 });
@@ -65,7 +69,7 @@ const planner = agent({
 async function main(): Promise<void> {
   const session = new Session({
     agent: planner,
-    defaultAdapter: makeAdapter(),
+    defaultAdapter: adapter,
     hooks: makeHooks(),
   });
   try {
@@ -76,7 +80,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  (globalThis as { process?: { exit?: (n: number) => void } }).process?.exit?.(1);
-});
+runIfMain(import.meta.url, main);

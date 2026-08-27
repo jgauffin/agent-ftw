@@ -1,0 +1,7 @@
+{
+  "finish_triage": {
+    "severity": "high",
+    "area": "api",
+    "note": "a real note"
+  }
+}

@@ -14,7 +14,11 @@
 
 import { agent, phase, tool } from "../src/declare/index.js";
 import { Session } from "../src/runtime/session.js";
-import { makeAdapter, makeHooks } from "./shared.js";
+import { makeAdapter, makeHooks, runIfMain } from "./shared.js";
+
+// Exported so tooling that reads this file (the studio, a test) gets the same
+// model this example runs against, instead of substituting one of its own.
+export const adapter = makeAdapter();
 
 // --- agent-wide tool: a tiny scratchpad for notes ---
 const notes: string[] = [];
@@ -108,7 +112,7 @@ const plan = phase({
   } as const,
 });
 
-const productAgent = agent({
+export const productAgent = agent({
   name: "product",
   tools: [writeNote], // agent-wide; available in every phase
   phases: [research, plan],
@@ -117,7 +121,7 @@ const productAgent = agent({
 async function main(): Promise<void> {
   const session = new Session({
     agent: productAgent,
-    defaultAdapter: makeAdapter(),
+    defaultAdapter: adapter,
     hooks: makeHooks(),
   });
   try {
@@ -129,7 +133,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  (globalThis as { process?: { exit?: (n: number) => void } }).process?.exit?.(1);
-});
+runIfMain(import.meta.url, main);

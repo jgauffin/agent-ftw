@@ -19,7 +19,11 @@
 
 import { agent, phase, subAgent, tool } from "../src/declare/index.js";
 import { Session } from "../src/runtime/session.js";
-import { makeAdapter, makeHooks } from "./shared.js";
+import { makeAdapter, makeHooks, runIfMain } from "./shared.js";
+
+// Exported so tooling that reads this file (the studio, a test) gets the same
+// model this example runs against, instead of substituting one of its own.
+export const adapter = makeAdapter();
 
 // ---------- tools ----------
 
@@ -76,7 +80,7 @@ const writeSource = tool({
 
 // ---------- workers ----------
 
-const implementer = agent({
+export const implementer = agent({
   name: "implementer",
   phases: [
     phase({
@@ -101,7 +105,7 @@ const implementer = agent({
   ],
 });
 
-const reviewer = agent({
+export const reviewer = agent({
   name: "reviewer",
   phases: [
     phase({
@@ -124,7 +128,7 @@ const reviewer = agent({
 
 // ---------- coordinator ----------
 
-const lead = agent({
+export const lead = agent({
   name: "lead",
   role: "coordinator",
   // What the coordinator may call itself. Nothing here changes anything.
@@ -177,6 +181,15 @@ const lead = agent({
             required: ["task"],
           } as const,
           agent: reviewer,
+          // A reviewer that says "revise" without saying what is wrong has not
+          // reviewed anything, and the coordinator has nothing to act on.
+          accept: async (result) => {
+            const { verdict, notes } = result as { verdict: string; notes: string };
+            if (verdict === "revise" && notes.trim().length === 0) {
+              return { ok: false, reason: "say what needs revising, not just that it does" };
+            }
+            return { ok: true };
+          },
         }),
       ],
       deliverable: {
@@ -194,7 +207,7 @@ const lead = agent({
 async function main(): Promise<void> {
   const session = new Session({
     agent: lead,
-    defaultAdapter: makeAdapter(),
+    defaultAdapter: adapter,
     hooks: makeHooks(),
     // Covers the whole tree, sub-agents included.
     turnBudget: 60,
@@ -213,7 +226,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  (globalThis as { process?: { exit?: (n: number) => void } }).process?.exit?.(1);
-});
+runIfMain(import.meta.url, main);

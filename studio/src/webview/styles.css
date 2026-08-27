@@ -1,0 +1,556 @@
+/*
+ * Everything is expressed in VS Code's own theme variables, so the panel
+ * follows whatever theme the editor is on rather than shipping a light and a
+ * dark palette of its own.
+ */
+
+:root {
+  --gap: 0.75rem;
+  --rule: var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+  --muted: var(--vscode-descriptionForeground, #999);
+  --warn: var(--vscode-editorWarning-foreground, #cca700);
+  --bad: var(--vscode-editorError-foreground, #f14c4c);
+  --good: var(--vscode-testing-iconPassed, #3fb950);
+}
+
+body {
+  margin: 0;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+}
+
+button {
+  font: inherit;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: none;
+  border-radius: 2px;
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+
+  &:hover { background: var(--vscode-button-hoverBackground); }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+textarea,
+input,
+select {
+  font: inherit;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 2px;
+  padding: 0.25rem 0.4rem;
+}
+
+pre {
+  margin: 0 0 var(--gap);
+  padding: 0.5rem 0.6rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em;
+  background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.1));
+  border-radius: 3px;
+}
+
+h2 { font-size: 1.05em; margin: 0 0 0.4rem; }
+h3 { font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: var(--gap) 0 0.3rem; }
+
+/*
+ * A column rather than a grid with named tracks. Half these sections are
+ * removed from the DOM by an `if`, and a track list has to be told how many
+ * children to expect; a column does not.
+ */
+.studio {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.run-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: var(--gap);
+  border-bottom: 1px solid var(--rule);
+
+  & .run-input { flex: 1; resize: vertical; }
+  & .agent-picker { display: flex; align-items: center; gap: 0.3rem; }
+  & .status { color: var(--muted); min-width: 5rem; }
+  & .status.failed { color: var(--bad); }
+  & .status.done { color: var(--good); }
+}
+
+.pins {
+  padding: var(--gap);
+  border-bottom: 1px solid var(--rule);
+
+  & .hint { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.85em; }
+  & .hint strong { color: var(--vscode-foreground); }
+  & ol { list-style: none; margin: 0; padding: 0; }
+  & li { margin-bottom: 0.5rem; }
+  & label { display: block; margin-bottom: 0.2rem; font-family: var(--vscode-editor-font-family); }
+  & .pin-json {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--vscode-editor-font-family);
+    font-size: 0.9em;
+    resize: vertical;
+  }
+  & .pin-error { color: var(--bad); font-size: 0.85em; }
+  & .unpin { background: transparent; color: var(--vscode-textLink-foreground); }
+}
+
+.run-fields {
+  padding: var(--gap);
+  border-bottom: 1px solid var(--rule);
+
+  & .hint { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.85em; }
+  & ol { list-style: none; margin: 0 0 0.5rem; padding: 0; }
+  & li {
+    display: grid;
+    grid-template-columns: minmax(6rem, max-content) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.3rem 0.6rem;
+    margin-bottom: 0.35rem;
+  }
+  & label { color: var(--muted); }
+  & .field-note { grid-column: 2; color: var(--muted); font-size: 0.8em; }
+}
+
+.input-mode {
+  background: transparent;
+  color: var(--vscode-textLink-foreground);
+
+  &:hover { background: var(--vscode-toolbar-hoverBackground); }
+}
+
+.failure {
+  margin: 0;
+  padding: var(--gap);
+  color: var(--bad);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* A prompt blocks the run, so it takes the top of the panel until answered. */
+.prompt {
+  padding: var(--gap);
+  border-bottom: 1px solid var(--rule);
+  background: var(--vscode-inputValidation-infoBackground, rgba(100, 148, 237, 0.12));
+
+  & .question { margin: 0 0 0.5rem; }
+  & .warning { color: var(--warn); margin: 0 0 0.5rem; }
+  & .prompt-text { width: 100%; box-sizing: border-box; margin-bottom: 0.4rem; }
+  & .options { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.5rem; padding: 0; }
+  & .approve { background: var(--good); }
+  & .budget-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.15rem 0.75rem;
+    margin: 0 0 0.5rem;
+
+    & dt { color: var(--muted); }
+    & dd { margin: 0; }
+  }
+}
+
+/*
+ * The map and the inspector. Two panes rather than four, because the editors
+ * are the part that was cramped: a prompt or a schema wants the whole pane, and
+ * a VS Code panel is often half a screen.
+ */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(14rem, 24rem) minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* Too narrow to sit side by side: the map goes on top, capped, and scrolls. */
+@media (max-width: 58rem) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 14rem) minmax(0, 1fr);
+  }
+  .map { border-right: none; border-bottom: 1px solid var(--rule); }
+}
+
+.map {
+  overflow: auto;
+  border-right: 1px solid var(--rule);
+  padding: 0.4rem;
+
+  & .hint { color: var(--muted); padding: var(--gap); margin: 0; }
+}
+
+
+.marker {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--rule);
+
+  &.running { background: var(--warn); border-color: var(--warn); }
+  &.done { background: var(--good); border-color: var(--good); }
+  &.failed { background: var(--bad); border-color: var(--bad); }
+  &.cached { background: var(--muted); border-color: var(--muted); }
+}
+
+.inspector {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.inspector-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem var(--gap) 0;
+
+  & .inspector-title { font-weight: 600; }
+  & .inspector-subtitle { color: var(--muted); font-size: 0.85em; }
+  & .reveal { margin-left: auto; font-size: 0.8em; }
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.3rem var(--gap) 0;
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.tab {
+  background: transparent;
+  color: var(--vscode-foreground);
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  white-space: nowrap;
+
+  &.current {
+    color: var(--vscode-textLink-foreground);
+    border-bottom-color: var(--vscode-textLink-foreground);
+  }
+  &:hover { background: var(--vscode-toolbar-hoverBackground); }
+  /* The run is about the whole session, not about what is selected. */
+  &.trailing { margin-left: auto; }
+
+  & .tab-badge {
+    margin-left: 0.35rem;
+    color: var(--muted);
+    font-size: 0.8em;
+  }
+}
+
+/*
+ * One feature, filling the pane. This is the whole point of the tab bar: a
+ * prompt or a schema is unworkable in a column, and there are four of them.
+ */
+.tab-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  & .hint { color: var(--muted); padding: var(--gap); margin: 0; }
+}
+
+.pane {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  & > .hint { padding: 0 0 0.4rem; font-size: 0.85em; }
+  & h4 { margin: var(--gap) 0 0.2rem; font-size: 0.8em; color: var(--muted); }
+  & > .note { color: var(--muted); font-size: 0.85em; margin: 0.3rem 0 0; }
+}
+
+/* The editor that should take whatever room is left, which is why it is here. */
+.field.grow {
+  flex: 1;
+  min-height: 8rem;
+}
+
+.field.narrow {
+  width: auto;
+  min-width: 6rem;
+  align-self: flex-start;
+}
+
+/*
+ * The drawing. Depth runs left to right, so an edge can leave the phase row
+ * that declared a child rather than the bottom of the whole box.
+ */
+.graph {
+  display: block;
+
+  & .edge {
+    stroke: var(--rule);
+    stroke-width: 1.5;
+
+    &.selected { stroke: var(--vscode-textLink-foreground); stroke-width: 2; }
+  }
+
+  & .node { cursor: pointer; }
+  & .node .box {
+    fill: var(--vscode-editorWidget-background, rgba(128, 128, 128, 0.1));
+    stroke: var(--rule);
+  }
+  & .node:hover .box { stroke: var(--vscode-textLink-foreground); }
+  & .node.selected .box {
+    stroke: var(--vscode-textLink-foreground);
+    stroke-width: 2;
+  }
+
+  & .agent .box { fill: var(--vscode-sideBar-background, rgba(128, 128, 128, 0.16)); }
+  & .agent.coordinator .box { stroke: var(--warn); }
+  & .agent.mutates .box { stroke-dasharray: 4 2; }
+
+  & .phase .box { fill: transparent; stroke: transparent; }
+  & .phase:hover .box { fill: var(--vscode-list-hoverBackground); }
+  & .phase.selected .box { fill: var(--vscode-list-activeSelectionBackground); }
+  /* A phase carrying findings is tinted rather than badged: the count is in the
+     agent's header and the tint is what makes it findable. */
+  & .phase.problems .box { fill: rgba(204, 167, 0, 0.14); }
+  & .phase.running .box { stroke: var(--warn); stroke-dasharray: 3 2; }
+  & .phase.done .box { stroke: var(--good); }
+  & .phase.failed .box { stroke: var(--bad); }
+
+  & text { fill: var(--vscode-foreground); font-size: 11px; }
+  & .agent .node-name { font-weight: 600; font-size: 12px; }
+  & .node-role,
+  & .node-note { fill: var(--muted); font-size: 10px; }
+  & .node-badge { fill: var(--warn); font-size: 10px; font-weight: 600; }
+}
+
+.agent-settings {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.3rem 0.75rem;
+  margin: 0;
+  align-items: baseline;
+
+  & dt { color: var(--muted); }
+  & dd { margin: 0; }
+  /* A locked field still shows its value: the panel is useless if it hides
+     what it will not let you change. */
+  & dd.locked { color: var(--muted); }
+}
+
+.sub-agent-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sub-agent-card {
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+
+  &:hover { border-color: var(--vscode-textLink-foreground); }
+  &.selected { border-color: var(--vscode-textLink-foreground); background: var(--vscode-list-hoverBackground); }
+
+  & header { display: flex; align-items: baseline; gap: 0.5rem; cursor: pointer; }
+  & .card-name { font-weight: 600; }
+  & .card-role { margin-left: auto; color: var(--muted); font-size: 0.8em; }
+  & .card-description { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.85em; }
+
+  & dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.2rem 0.5rem;
+    margin: 0.4rem 0 0;
+    font-size: 0.85em;
+    align-items: baseline;
+  }
+  & dt { color: var(--muted); }
+  & dd { margin: 0; }
+}
+
+/* A child nobody checks on return is the drift acceptance exists to catch. */
+.sub-agent-card.unchecked { border-left: 3px solid var(--warn); }
+
+/* The deliverable tab holds one schema per entry, the first of which is editable. */
+.schema-entry {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  &:first-of-type { flex: 1; }
+  & h4 { margin: 0 0 0.2rem; }
+}
+
+.status-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem var(--gap);
+  border-top: 1px solid var(--rule);
+
+  & .spacer { flex: 1; }
+  & .validity { color: var(--muted); }
+  & .validity.good { color: var(--good); }
+  & .validity.warn { color: var(--warn); }
+  & .validity.failed { color: var(--bad); }
+  & .edit-error { color: var(--bad); }
+  & .pending-count { color: var(--warn); font-size: 0.85em; }
+  & .discard { background: transparent; color: var(--vscode-textLink-foreground); }
+}
+
+.pending-edits {
+  flex: 0 0 auto;
+  max-height: 8rem;
+  overflow-y: auto;
+  border-top: 1px solid var(--rule);
+  padding: 0.4rem var(--gap);
+  background: var(--vscode-inputValidation-infoBackground, rgba(100, 148, 237, 0.12));
+
+  & ol { list-style: none; margin: 0; padding: 0; }
+  & li { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.1rem 0; }
+  & .pending-what { font-family: var(--vscode-editor-font-family); font-size: 0.9em; }
+  & .unstage {
+    background: transparent;
+    color: var(--vscode-textLink-foreground);
+    font-size: 0.8em;
+    padding: 0 0.4rem;
+  }
+}
+
+/*
+ * An editable field. A locked one is still shown, with the reason beside it:
+ * hiding what the panel will not let you change would make it useless in
+ * exactly the codebases worth editing.
+ */
+.field {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em;
+  resize: vertical;
+}
+
+.control {
+  color: var(--muted);
+  font-size: 0.8em;
+
+  &.locked { font-style: italic; }
+  /* A staged change is not in the file yet, and the control should say so. */
+  &.pending { color: var(--warn); font-weight: 600; }
+}
+
+.lock-reason {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78em;
+  font-style: italic;
+}
+
+.assign {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  flex-wrap: wrap;
+
+  & .assign-tool { flex: 1; min-width: 6rem; }
+  & button { font-size: 0.8em; }
+}
+
+.unwired {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.schema-edit { min-height: 8rem; }
+
+.pane {
+  & .findings { list-style: none; margin: 0 0 var(--gap); padding: 0; }
+  & .findings:empty { margin: 0; }
+  & .findings-actions { margin: 0 0 0.4rem; }
+  & .copy-all { font-size: 0.85em; }
+  & .finding {
+    padding: 0.4rem 0.6rem;
+    border-left: 3px solid var(--warn);
+    margin-bottom: 0.35rem;
+    background: rgba(128, 128, 128, 0.08);
+
+    /* The field is what makes the advice actionable, so it leads. */
+    & .finding-field {
+      font-family: var(--vscode-editor-font-family);
+      font-weight: 600;
+    }
+    & .finding-code { color: var(--muted); font-size: 0.8em; margin-left: 0.5rem; }
+    & .copy-one {
+      float: right;
+      font-size: 0.8em;
+      padding: 0.1rem 0.5rem;
+      background: transparent;
+      color: var(--vscode-textLink-foreground);
+
+      &:hover { background: var(--vscode-toolbar-hoverBackground); }
+    }
+    & .finding-message { margin: 0.2rem 0 0; }
+    & .finding-hint { margin: 0.2rem 0 0; color: var(--muted); }
+    & .finding-example { margin: 0.35rem 0 0; font-size: 0.85em; }
+  }
+  & .finding.error { border-left-color: var(--bad); }
+}
+
+.tools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  & li { display: flex; gap: 0.5rem; padding: 0.15rem 0; }
+}
+
+.tool-name { font-family: var(--vscode-editor-font-family); }
+.tool-note { color: var(--muted); font-size: 0.85em; }
+/* Injected tools read differently from ones the author wrote. */
+.tool-note.delegate,
+.tool-note.sideQuestProposal { font-style: italic; }
+/* A tool that changes things is the one worth spotting in a list. */
+.tool-note.mutates { color: var(--warn); }
+
+.pane.timeline {
+  & .hint { color: var(--muted); margin: 0; padding: 0; }
+  & .rollup { margin: 0 0 0.4rem; color: var(--muted); font-size: 0.85em; }
+  & .clean { margin: 0 0 var(--gap); color: var(--good); font-size: 0.85em; }
+
+  & .events { list-style: none; margin: 0; padding: 0; }
+  & .events li {
+    display: grid;
+    grid-template-columns: 0.6rem minmax(6rem, max-content) 1fr;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.1rem 0;
+  }
+  & .note { color: var(--muted); font-size: 0.85em; }
+  & .problems {
+    grid-column: 3;
+    color: var(--warn);
+    font-size: 0.85em;
+  }
+  & .pin {
+    background: transparent;
+    color: var(--vscode-textLink-foreground);
+    font-size: 0.8em;
+    padding: 0 0.4rem;
+
+    &:hover { background: var(--vscode-toolbar-hoverBackground); }
+  }
+  & li.pinned .label { font-weight: 600; }
+}

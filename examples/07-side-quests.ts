@@ -15,7 +15,11 @@
 
 import { agent, phase, tool, SIDE_QUEST_TOOL_NAME } from "../src/declare/index.js";
 import { Session } from "../src/runtime/session.js";
-import { makeAdapter, makeHooks } from "./shared.js";
+import { makeAdapter, makeHooks, runIfMain } from "./shared.js";
+
+// Exported so tooling that reads this file (the studio, a test) gets the same
+// model this example runs against, instead of substituting one of its own.
+export const adapter = makeAdapter();
 
 // ---------- catalog tools the agent may request for a side quest ----------
 const lookup = tool({
@@ -47,7 +51,7 @@ const probe = tool({
 });
 
 // ---------- main agent ----------
-const planner = agent({
+export const planner = agent({
   name: "planner",
   phases: [
     phase({
@@ -87,7 +91,7 @@ const planner = agent({
 async function main(): Promise<void> {
   const session = new Session({
     agent: planner,
-    defaultAdapter: makeAdapter(),
+    defaultAdapter: adapter,
     hooks: makeHooks(),
   });
 
@@ -109,7 +113,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  (globalThis as { process?: { exit?: (n: number) => void } }).process?.exit?.(1);
-});
+runIfMain(import.meta.url, main);

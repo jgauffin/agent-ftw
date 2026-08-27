@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Pre-1.0
 ## 0.3.0
 
 Governed coordinator/sub-agent trees, plus static and runtime diagnostics.
-s
+
 ### Added
 
 - **Coordinators.** `role: "coordinator"` injects a `delegate` tool taking a batch of contracts, validated as a unit before any of it starts.
@@ -16,9 +16,15 @@ s
 - **Artifact store.** Accepted results are keyed by run path; a later contract's `reads` grants a scoped `read_artifact` tool. Siblings share work without talking to each other.
 - **Drift guards.** Duplicate contracts refused, `maxBatches` caps re-planning, `maxEmptyBatches` caps fruitless rounds. Failed contracts stay retryable.
 - **Journal.** Delegations and outcomes appended as NDJSON when persistence is on.
-- **`lint(agent)`.** Static checks for deliverables an empty object satisfies, undescribed free-form strings, unbounded objects, single-value enums, non-object deliverables, self-judging checklists, and budgets too small for the tools exposed. Advisory; separate from `validate`.
-- **Trace events.** `deliverable.rejected` (previously silent), `phase.nudged`, `ledger.denied`, `delegate.batch`, `delegate.rejected`, `contract.{start,end,accepted,rejected,abandoned,blocked}`.
+- **`lint(agent)`.** Static checks for deliverables an empty object satisfies, unexplained free-form strings, unbounded objects, single-value enums, non-object deliverables, self-judging checklists, and budgets too small for the tools exposed. Advisory; separate from `validate`.
+- **Lint checks that span the tree.** `pipeline.misspelled-reference` (a prompt names something close to a declared field but not it), `coordinator.unused-delegable` (authority handed down that no sub-agent can use), `subagent.unchecked` (a coordinator's child with no `accept`, so anything shape-valid is accepted). These need the tree's edges declared, which contracts now do.
+- **Lint calibration against the shipped examples.** Every example is linted in the test suite, snapshotting what fires. Exact checks are asserted never to fire on code we ship.
+- **Trace events.** `deliverable.rejected` (previously silent), `phase.nudged`, `delegate.batch`, `delegate.rejected`, `contract.{start,end,accepted,rejected,abandoned,blocked}`. A run that stops because the tree's shared balance is empty reports it as `budget.exhausted` with `limit: "run"`, which is what tells it apart from a phase running out of its own turns.
 - **Session options.** `turnBudget`, `maxDepth` (3), `maxFanOut` (8), `maxBatches` (4), `maxEmptyBatches` (2).
+- **`agent-ftw` command.** `check <file>` compiles and lints every agent a file exports and prints the phase tree with the injected tools in it. `dry-run <file>` runs the pipeline against values built from the schemas, so handoffs, tool wiring, `accept` predicates and budgets are exercised with no model and no key. `--json` on either gives the report as data. Exit codes: 0 clean, 1 problems, 2 bad usage.
+- **`describeAgent(decl)`.** The compiled tree as plain, serializable data, including the tools no one wrote. What the CLI prints and what any other host should project from rather than reimplementing.
+- **`synthesize(schema)`.** The smallest value a JSON Schema accepts, plus the places the schema did not say enough to build one (an unresolved `$ref`, a `pattern` no placeholder matches). Deterministic.
+- **`dryRunAdapter` / `stripAdapters` / `callableTools`.** An `Adapter` that answers from schemas instead of a model, the declaration transform that keeps a declared adapter from being reached during one, and the policy for which tool handlers a dry run may actually call (none by default).
 
 ### Fixed
 

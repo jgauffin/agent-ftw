@@ -21,12 +21,13 @@
 // `Adapter` instance, so `makeAdapter(...)` can be called per construct to mix
 // models across a pipeline.
 
+import { pathToFileURL } from "node:url";
 import { openaiCompatAdapter } from "../src/adapters/openai-compat.js";
 import type { Adapter } from "../src/adapters/types.js";
 import type { Hooks } from "../src/hooks/index.js";
 import type { TraceEvent } from "../src/trace/index.js";
 
-declare const process: { env: Record<string, string | undefined> };
+declare const process: { env: Record<string, string | undefined>; argv: string[] };
 
 export const MODEL_NAME = process.env.MODEL_NAME ?? "llama3.1";
 
@@ -101,6 +102,23 @@ export function makeHooks(): Hooks {
       }
     },
   };
+}
+
+/**
+ * Runs `main` only when this file was the one node was told to execute.
+ *
+ * Each example is two things at once: a script you run, and a module something
+ * else imports to get at the agent it declares. Tooling that reads a
+ * declaration (the studio, a test, your own dashboard) must be able to import
+ * the file without the run starting as a side effect of the import.
+ */
+export function runIfMain(moduleUrl: string, main: () => Promise<void>): void {
+  const entry = process.argv[1];
+  if (!entry || pathToFileURL(entry).href !== moduleUrl) return;
+  main().catch((e) => {
+    console.error(e);
+    (globalThis as { process?: { exit?: (n: number) => void } }).process?.exit?.(1);
+  });
 }
 
 function preview(value: unknown): string {

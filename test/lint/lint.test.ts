@@ -37,7 +37,7 @@ describe("lint", () => {
       properties: { notes: { type: "string" } },
       required: ["notes"],
     } as const);
-    expect(codes).toContain("deliverable.undescribed-freeform");
+    expect(codes).toContain("deliverable.unexplained-string");
   });
 
   it("accepts a free-form string the prompt explains instead of the schema", () => {
@@ -55,7 +55,7 @@ describe("lint", () => {
         }),
       ],
     });
-    expect(lint(a).map((f) => f.code)).not.toContain("deliverable.undescribed-freeform");
+    expect(lint(a).map((f) => f.code)).not.toContain("deliverable.unexplained-string");
   });
 
   it("accepts a constrained string without a description", () => {
@@ -64,7 +64,7 @@ describe("lint", () => {
       properties: { severity: { type: "string", enum: ["low", "high"] } },
       required: ["severity"],
     } as const);
-    expect(codes).not.toContain("deliverable.undescribed-freeform");
+    expect(codes).not.toContain("deliverable.unexplained-string");
   });
 
   it("flags an object that anything satisfies", () => {
@@ -101,7 +101,7 @@ describe("lint", () => {
       },
       required: ["findings"],
     } as const);
-    expect(codes).toContain("deliverable.undescribed-freeform");
+    expect(codes).toContain("deliverable.unexplained-string");
   });
 
   it("addresses the offending field by path", () => {
@@ -119,7 +119,7 @@ describe("lint", () => {
         }),
       ],
     });
-    const finding = lint(a).find((f) => f.code === "deliverable.undescribed-freeform");
+    const finding = lint(a).find((f) => f.code === "deliverable.unexplained-string");
     expect(finding?.path).toBe("triager/plan/deliverable#/notes");
   });
 

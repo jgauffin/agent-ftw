@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --prefix studio exec -- vitest run --root studio test/source/)",
+      "Bash(npm --prefix studio run build)",
+      "Bash(npm --prefix studio exec -- vitest run --root studio test/source/examples.test.ts)",
+      "Bash(npm --prefix studio exec -- tsc --noEmit -p studio/tsconfig.json)",
+      "Bash(npm --prefix studio exec -- vitest run --root studio)",
+      "Bash(grep -n \"path: \\\\|function phasePath\\\\|\\\\${agent.name}\" src/lint/index.ts)"
+    ]
+  }
+}

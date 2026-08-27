@@ -17,7 +17,11 @@
 
 import { agent, checklist, phase } from "../src/declare/index.js";
 import { Session } from "../src/runtime/session.js";
-import { makeAdapter, makeHooks } from "./shared.js";
+import { makeAdapter, makeHooks, runIfMain } from "./shared.js";
+
+// Exported so tooling that reads this file (the studio, a test) gets the same
+// model this example runs against, instead of substituting one of its own.
+export const adapter = makeAdapter();
 
 const qualityChecklist = checklist({
   // Verification override: runs on its own adapter instead of the phase's.
@@ -68,7 +72,7 @@ const polishPhase = phase({
   } as const,
 });
 
-const copywriter = agent({
+export const copywriter = agent({
   name: "copywriter",
   phases: [draftPhase, polishPhase],
 });
@@ -76,7 +80,7 @@ const copywriter = agent({
 async function main(): Promise<void> {
   const session = new Session({
     agent: copywriter,
-    defaultAdapter: makeAdapter(),
+    defaultAdapter: adapter,
     hooks: makeHooks(),
   });
   try {
@@ -87,7 +91,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  (globalThis as { process?: { exit?: (n: number) => void } }).process?.exit?.(1);
-});
+runIfMain(import.meta.url, main);

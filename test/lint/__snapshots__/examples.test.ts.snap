@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`lint against the shipped examples > reports a known, small set 1`] = `
+[
+  "01 greeter: deliverable.unexplained-string greeter/greet/deliverable#/message",
+  "03 planner: deliverable.unexplained-string planner/brainstorm/deliverable#/ideas/items/title",
+  "03 planner: deliverable.unexplained-string planner/brainstorm/deliverable#/ideas/items/summary",
+  "03 planner: deliverable.unexplained-string planner/pick_best/deliverable#/title",
+  "03 planner: deliverable.unexplained-string planner/pick_best/deliverable#/rationale",
+  "04 productAgent: deliverable.unexplained-string product/plan/deliverable#/features/items/name",
+  "04 productAgent: deliverable.unexplained-string product/plan/deliverable#/features/items/why",
+  "05 copywriter: deliverable.unexplained-string copywriter/polish/deliverable#/description",
+  "06 newsroom: deliverable.unexplained-string newsroom/investigate/deliverable#/verifications/items/status",
+  "06 newsroom: deliverable.unexplained-string newsroom/investigate/deliverable#/verifications/items/note",
+  "06 newsroom: deliverable.unexplained-string newsroom/publish/deliverable#/headline",
+  "06 newsroom: deliverable.unexplained-string newsroom/publish/deliverable#/caveats/items",
+  "06 newsroom: deliverable.unexplained-string fact_checker/verify/deliverable#/findings/items/note",
+  "07 sideQuests: deliverable.unexplained-string planner/plan/deliverable#/notes",
+]
+`;

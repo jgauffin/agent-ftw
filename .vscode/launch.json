@@ -1,0 +1,56 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Opens the repository as the workspace, plus one example already open
+      // and the studio panel already showing, so F5 lands on something to look
+      // at rather than an empty window.
+      "name": "Studio: multi-phase example",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/studio",
+        "${workspaceFolder}",
+        "${workspaceFolder}/examples/03-multi-phase.ts"
+      ],
+      "env": {
+        "AGENT_FTW_STUDIO_AUTO_OPEN": "1",
+        // The examples default to llama3.1. This overrides that for the
+        // development host only, so it names whatever is actually pulled
+        // locally rather than changing what the examples ship with.
+        "MODEL_NAME": "qwen3.8:27b-q4_K_M"
+      },
+      "outFiles": ["${workspaceFolder}/studio/out/**/*.js"],
+      "preLaunchTask": "studio: build"
+    },
+    {
+      // Three agents, a coordinator with `delegate`, and a sub-agent whose
+      // input schema the parent declares: the richest tree in the repo.
+      "name": "Studio: coordinator example",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/studio",
+        "${workspaceFolder}",
+        "${workspaceFolder}/examples/08-coordinator.ts"
+      ],
+      "env": {
+        "AGENT_FTW_STUDIO_AUTO_OPEN": "1",
+        // The examples default to llama3.1. This overrides that for the
+        // development host only, so it names whatever is actually pulled
+        // locally rather than changing what the examples ship with.
+        "MODEL_NAME": "qwen3.8:27b-q4_K_M"
+      },
+      "outFiles": ["${workspaceFolder}/studio/out/**/*.js"],
+      "preLaunchTask": "studio: build"
+    },
+    {
+      "name": "Studio: empty window",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/studio", "${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/studio/out/**/*.js"],
+      "preLaunchTask": "studio: build"
+    }
+  ]
+}

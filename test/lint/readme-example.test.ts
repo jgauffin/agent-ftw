@@ -78,9 +78,9 @@ describe("lint calibration", () => {
     // explain in prose (filesToTouch, reproTest) must stay unreported — a
     // linter that cries wolf on idiomatic code gets switched off.
     expect(summary).toEqual([
-      "deliverable.undescribed-freeform bug_triager/triage/deliverable#/reproSteps/items",
-      "deliverable.undescribed-freeform bug_triager/triage/deliverable#/suspectedCause",
-      "deliverable.undescribed-freeform bug_triager/plan/deliverable#/fixSummary",
+      "deliverable.unexplained-string bug_triager/triage/deliverable#/reproSteps/items",
+      "deliverable.unexplained-string bug_triager/triage/deliverable#/suspectedCause",
+      "deliverable.unexplained-string bug_triager/plan/deliverable#/fixSummary",
     ]);
   });
 });

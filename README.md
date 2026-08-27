@@ -187,7 +187,25 @@ for (const f of lint(triager)) {
   console.log(`${f.severity} ${f.code} at ${f.path}`);
   console.log(`  ${f.message}`);
   console.log(`  ${f.hint}`);
+  console.log(f.example);
 }
+```
+
+`path` addresses the exact place, down to a JSON pointer into the schema (`triager/plan/deliverable#/filesToTouch`), and `example` is the fix written out against the names in your own declaration rather than invented ones:
+
+```
+warn deliverable.unexplained-string at planner/brainstorm/deliverable#/ideas/items/title
+  String "title" accepts any text, and nothing says what belongs in it: no
+  schema description, and no mention in the phase prompt. The model is left to
+  guess.
+  Add a `description` to the property, name the field in the phase prompt, or
+  constrain it with an enum.
+
+// say what it holds, in the schema:
+title: { type: "string", description: "<what goes in title, and how long>" },
+
+// or mention "title" in the phase prompt; this check reads that too.
+prompt: "... and a title that <says what>",
 ```
 
 It catches things like a deliverable an empty object would satisfy (properties declared, nothing `required`), a free-form string explained neither by a schema `description` nor by the phase prompt, an object so unconstrained that anything validates, and a `checklist` with no `adapter` of its own, which leaves the model grading its own work.
@@ -195,6 +213,33 @@ It catches things like a deliverable an empty object would satisfy (properties d
 `lint` never throws and is separate from `validate`, which is what rejects a structurally invalid agent. These findings are about the quality of what you wrote, so the call is yours.
 
 When a run does go wrong, two trace events say why: `deliverable.rejected` fires for every payload that failed its schema, with the attempt number and the validation errors, and `phase.nudged` fires when the model produced text instead of calling a tool. A phase that keeps emitting either is telling you its instructions never gave it a path to finishing.
+
+## Checking it from a terminal
+
+`lint` and `validate` are functions, so reaching them means writing a script that imports your agent and prints what they said. The CLI is that script, and one thing a script cannot easily be:
+
+```bash
+npx agent-ftw check ./my-agent.ts
+npx agent-ftw dry-run ./my-agent.ts --tools safe
+```
+
+`check` compiles every agent the file exports and lints it, then prints the phase tree with the tools each phase actually gets (`finish_<phase>`, a coordinator's `delegate` and the side-quest proposal included, since those are the ones a reader is usually missing), followed by every finding and its path.
+
+`dry-run` runs the pipeline with deliverables built from the schemas instead of from a model. No model is called and no key is needed: declared adapters are stripped, so a phase carrying its own cannot quietly reach one. What it proves is the half of an agent that is ordinary code — that phases hand off in the order declared, that each deliverable schema can be satisfied at all, that tool handlers run against inputs their own schema promised, that `accept` predicates return what the parent expects, and that the budgets add up. What it cannot tell you is whether a model would produce anything sensible, and it does not pretend to.
+
+Tool handlers are not called by default, because a handler writes files and sends mail. `--tools safe` calls the ones that declare no `mutates`; `--tools all` calls every one of them, sub-agents included, which runs those children's own pipelines the same way.
+
+A coordinator's `delegate` is never called: a batch has to name real children, fit the turn balance and declare write-sets, and a value built from the schema satisfies none of that. So a dry run of a coordinator exercises its phases, not its delegation. Call the children directly with `--tools all` to exercise theirs.
+
+Both commands take `--json`, which is the same report as data rather than text. Exit codes are 0 clean, 1 problems found, 2 bad usage.
+
+The file has to be importable without starting a run, and the agent has to be exported — a declaration in a local variable is invisible to everything but the file it lives in. TypeScript is read through `tsx` when the project has it, which is what you want if your imports use the `./x.js`-means-`./x.ts` convention; failing that, Node's own type stripping.
+
+## Studio: designing a tree in the editor
+
+Reading those events off a console works, but a tree of any size is hard to hold in your head that way, and every run that would tell you whether the design is right comes back different. [studio/](./studio/) is a VS Code panel for that loop. It draws the tree, sub-agents nested, including the tools nobody wrote (`finish_<phase>`, a coordinator's `delegate`), runs it, and reports per phase what it cost and what it had to retry. `lint` findings land in the Problems panel, and `askUser`, `review` and `requestBudgetExtension` become real prompts rather than something a host stubs out.
+
+It reads your file's exports, so the agent has to be exported and the module has to be importable without starting a run. See [studio/README.md](./studio/README.md).
 
 ## Honest comparison to other agent frameworks
 
